@@ -1,0 +1,10 @@
+INSERT INTO "product_image" ("image_id", "product_id", "image_url", "sort_order", "created_at") VALUES (4, 4, '/api/uploads/20260113_83908444-f699-4f0c-a7a4-f370e6a2d185.jpg', 0, '2026-01-13 00:04:49.700598+08');
+INSERT INTO "product_image" ("image_id", "product_id", "image_url", "sort_order", "created_at") VALUES (5, 4, '/api/uploads/20260113_797922fa-a4cf-4396-9eb1-60798c1b570f.jpg', 1, '2026-01-13 00:04:49.700598+08');
+INSERT INTO "product_image" ("image_id", "product_id", "image_url", "sort_order", "created_at") VALUES (6, 5, '/api/uploads/20260113_97af74ef-9980-41f3-8804-173769d46edb.jpg', 0, '2026-01-13 19:26:08.795515+08');
+INSERT INTO "product_image" ("image_id", "product_id", "image_url", "sort_order", "created_at") VALUES (7, 6, '/api/uploads/20260113_f7d676dc-0531-482b-8440-6eb9b628ef9e.jpg', 0, '2026-01-13 19:26:19.21166+08');
+INSERT INTO "product_image" ("image_id", "product_id", "image_url", "sort_order", "created_at") VALUES (8, 7, '/api/uploads/20260113_1239f3d4-0177-41fa-ae82-1b8425495004.jpg', 0, '2026-01-13 19:26:36.584782+08');
+INSERT INTO "product_image" ("image_id", "product_id", "image_url", "sort_order", "created_at") VALUES (9, 8, '/api/uploads/20260113_46a4406f-0bfe-4b6c-b4f2-d6cbdc43ae9f.jpg', 0, '2026-01-13 19:26:57.00059+08');
+INSERT INTO "product_image" ("image_id", "product_id", "image_url", "sort_order", "created_at") VALUES (10, 9, '/api/uploads/20260113_b8926f8e-ef73-4a2d-808c-7f8824ce46f7.jpg', 0, '2026-01-13 19:27:47.132578+08');
+INSERT INTO "product_image" ("image_id", "product_id", "image_url", "sort_order", "created_at") VALUES (11, 10, '/api/uploads/20260113_c1f9d047-d7f9-405b-a671-3ea89142132f.webp', 0, '2026-01-13 19:28:23.107973+08');
+INSERT INTO "product_image" ("image_id", "product_id", "image_url", "sort_order", "created_at") VALUES (12, 11, '/api/uploads/20260113_f05d9db8-3f71-4cee-98c7-0e3a08ca8f4f.webp', 0, '2026-01-13 19:29:11.709641+08');
+INSERT INTO "product_image" ("image_id", "product_id", "image_url", "sort_order", "created_at") VALUES (13, 12, '/api/uploads/20260113_c735c101-7c63-4cdd-9a95-b69c72812f5f.jpg', 0, '2026-01-13 19:31:20.162787+08');

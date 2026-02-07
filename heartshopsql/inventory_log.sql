@@ -1,0 +1,1 @@
+INSERT INTO "inventory_log" ("log_id", "product_id", "change_type", "quantity_before", "quantity_change", "quantity_after", "operator", "remark", "created_at") VALUES (1, 4, 'ADJUST', 0, 1, 1, '', '', '2026-01-13 16:45:31.059675+08');
