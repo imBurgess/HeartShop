@@ -47,105 +47,62 @@
         </div>
       </div>
 
-      <!--goods-->
-      <div class="goods_header">
-        <h1 class="main-head watch inview">
-          <span class="split-w"><span>G</span></span>
-          <span class="split-w"><span>O</span></span>
-          <span class="split-w"><span>O</span></span>
-          <span class="split-w"><span>D</span></span>
-          <span class="split-w"><span>S</span></span>
-        </h1>
-
-        <div class="lines watch inview">
-          <span class="hori hori-1"></span>
-          <span class="hori hori-2"></span>
-          <span class="hori hori-3"></span>
-          <span class="hori hori-4"></span>
-          <span class="hori hori-5"></span>
-
-          <span class="ver ver-1"></span>
-          <span class="ver ver-2"></span>
-          <span class="ver ver-3"></span>
-          <span class="ver ver-4"></span>
-          <span class="ver ver-5"></span>
+      <!-- 現已上架商品 -->
+      <section class="active-products">
+        <div class="section-header">
+          <h2 class="section-title">現已上架商品</h2>
         </div>
-      </div>
-      <!--商品欄位-->
-      <section class="product-grid">
-        <div class="product-card" v-for="(item, i) in products" :key="i">
-          <img :src="item.image" :alt="item.name" class="product-image" />
 
-          <div class="product-info">
-            <h3 class="product-name">{{ item.name }}</h3>
-            <p class="product-price">{{ item.price }}</p>
-            <p v-if="item.soldOut" class="sold-out">- SOLD OUT -</p>
+        <div v-if="activeProducts.length > 0" class="products-grid">
+          <div
+            v-for="product in activeProducts"
+            :key="product.productId"
+            class="product-card"
+            @click="navigateToProduct(product.productId)"
+          >
+            <div class="product-image-wrapper">
+              <img
+                :src="getProductImageUrl(product.imageUrl)"
+                :alt="product.name"
+                class="product-image"
+              />
+              <div v-if="product.isNew" class="badge new-badge">新上架</div>
+            </div>
+
+            <div class="product-info">
+              <h3 class="product-name">{{ product.name }}</h3>
+
+              <div class="meta-row">
+                <span class="price"
+                  >NT${{ product.price?.toLocaleString() || "0" }}</span
+                >
+
+                <div class="actions">
+                  <button class="qty-btn" @click.stop="updateQty(product, -1)">
+                    -
+                  </button>
+                  <span class="qty">{{ product.quantity || 1 }}</span>
+                  <button class="qty-btn" @click.stop="updateQty(product, 1)">
+                    +
+                  </button>
+
+                  <button
+                    class="cart-btn"
+                    @click.stop="addToCart(product)"
+                    aria-label="加入購物車"
+                  ></button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
 
-      <!-- 所有商品按鈕 -->
-      <div class="view-all-button-container">
-        <a href="/shop/recommend" class="view-all-button">
-          <span>ALL ITEMS</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </a>
-      </div>
-
-      <!-- 會員 -->
-      <a href="/member" class="join-member-banner">
-        <p>加入會員禮送 <span class="highlight">XX</span> 點</p>
-      </a>
-
-      <!--商品推薦-->
-      <section class="featured-products">
-        <div class="main-banner">
-          <a :href="mainBanner.href" target="_blank">
-            <img :src="mainBanner.image" alt="廣告 or 商品介紹圖" />
-          </a>
+        <div v-else class="no-products">
+          <p>暫無上架商品</p>
         </div>
 
-        <div class="sub-products">
-          <a
-            v-for="(item, i) in subProducts"
-            :key="i"
-            :href="item.href"
-            target="_blank"
-            class="product"
-          >
-            <img :src="item.image" :alt="item.name" />
-            <p>{{ item.name }}</p>
-          </a>
-        </div>
-      </section>
-
-      <!--消息-->
-      <section class="announcements">
-        <!-- 上方大公告 -->
-        <a class="hero" :href="hero.href" target="_blank" rel="noopener">
-          <span>{{ hero.title }}</span>
-        </a>
-
-        <!-- 下方兩張 -->
-        <div class="tiles">
-          <a
-            v-for="(t, i) in tiles"
-            :key="i"
-            class="tile"
-            :href="t.href"
-            target="_blank"
-            rel="noopener"
-          >
-            <span>{{ t.title }}</span>
-          </a>
+        <div class="view-all-wrapper">
+          <a href="/shop/popular" class="view-all-button">ALL ITEMS</a>
         </div>
       </section>
     </main>
@@ -157,64 +114,75 @@ import { ref, onMounted } from "vue";
 import Particles from "@/components/Particles.vue";
 import { ArrowBack, ArrowForward } from "@vicons/ionicons5";
 import { homeBlockService, type HomeBlockDTO } from "@/services/homeBlock";
-import { productService } from "@/services/product";
+import { productService, type Product } from "@/services/product";
 
 // 輪播廣告
 const carouselBlocks = ref<HomeBlockDTO[]>([]);
 
-// 會員橫幅
-const memberBanner = ref<HomeBlockDTO | null>(null);
-
-// 商品推薦區
-const productRecommendBlocks = ref<HomeBlockDTO[]>([]);
-const mainBanner = ref({
-  image: "",
-  href: "#",
-});
-const subProducts = ref([
-  {
-    name: "商品名稱 A",
-    image: "",
-    href: "#",
-  },
-  {
-    name: "商品名稱 B",
-    image: "",
-    href: "#",
-  },
-]);
-
-// 商品欄位（從 API 取得，隨機 8 個）
-const products = ref<any[]>([
-  { name: "商品名稱1", price: "9,000", image: "", soldOut: true },
-  { name: "商品名稱2", price: "9,000", image: "", soldOut: true },
-  { name: "商品名稱3", price: "9,000", image: "", soldOut: true },
-  { name: "商品名稱4", price: "9,000", image: "", soldOut: true },
-  { name: "商品名稱5", price: "9,000", image: "", soldOut: true },
-  { name: "商品名稱6", price: "9,000", image: "", soldOut: true },
-  { name: "商品名稱7", price: "9,000", image: "", soldOut: true },
-  { name: "商品名稱8", price: "9,000", image: "", soldOut: true },
-]);
-
-// 公告區
-const hero = ref({
-  title: "提醒防詐騙公告",
-  href: "#",
-});
-
-const tiles = ref([
-  { title: "精選", href: "#" },
-  { title: "精選", href: "#" },
-]);
+// 現已上架商品
+const activeProducts = ref<Product[]>([]);
 
 // 圖片 URL 轉換函數
 const getFullImageUrl = (imageUrl?: string): string => {
+  console.log("[getFullImageUrl] 原始 URL:", imageUrl);
   if (!imageUrl) return "";
+
   // 如果已經是完整 URL,直接返回
-  if (imageUrl.startsWith("http")) return imageUrl;
-  // 否則加上後端 baseURL（注意：後端 context-path=/api）
-  const baseUrl = "http://localhost:8080/api"; // 可從環境變數讀取
-  return `${baseUrl}${imageUrl}`;
+  if (imageUrl.startsWith("http")) {
+    console.log("[getFullImageUrl] 已是完整 URL，直接返回");
+    return imageUrl;
+  }
+
+  // 如果是以 / 開頭的絕對路徑
+  if (imageUrl.startsWith("/")) {
+    const baseUrl = "http://localhost:8080";
+    // 特別處理：如果是 /uploads 開頭但不含 /api，需要加上 /api
+    if (imageUrl.startsWith("/uploads")) {
+      const fullUrl = `${baseUrl}/api${imageUrl}`;
+      console.log("[getFullImageUrl] /uploads 路徑，加上 /api:", fullUrl);
+      return fullUrl;
+    }
+    // 其他以 / 開頭的路徑（如已含 /api）直接拼接
+    const fullUrl = `${baseUrl}${imageUrl}`;
+    console.log("[getFullImageUrl] 絕對路徑，完整 URL:", fullUrl);
+    return fullUrl;
+  }
+
+  // 相對路徑，加上完整路徑
+  const baseUrl = "http://localhost:8080/api";
+  const fullUrl = `${baseUrl}/${imageUrl}`;
+  console.log("[getFullImageUrl] 相對路徑，完整 URL:", fullUrl);
+  return fullUrl;
+};
+
+// 商品圖片 URL 轉換
+const getProductImageUrl = (imageUrl?: string): string => {
+  console.log("[DEBUG] 原始 imageUrl:", imageUrl);
+  if (!imageUrl) {
+    console.log("[DEBUG] imageUrl 為空，使用預設圖片");
+    return "/images/placeholder-product.jpg";
+  }
+  const fullUrl = getFullImageUrl(imageUrl);
+  console.log("[DEBUG] 完整圖片 URL:", fullUrl);
+  return fullUrl;
+};
+
+// 導航到商品詳情頁
+const navigateToProduct = (productId: number) => {
+  window.location.href = `/product/${productId}`;
+};
+
+// 購物車相關邏輯
+const updateQty = (item: any, delta: number) => {
+  const next = (item.quantity || 1) + delta;
+  if (next < 1) return;
+  item.quantity = next;
+};
+
+const addToCart = (item: any) => {
+  console.log("加入購物車", item.name, "數量", item.quantity);
+  // 未來可以整合購物車 API
+  // window.alert(`已加入購物車：${item.name} x ${item.quantity}`);
 };
 
 // 輪播圖點擊處理
@@ -225,108 +193,65 @@ const handleCarouselClick = (block: HomeBlockDTO) => {
   }
 };
 
+// 載入上架商品
+const loadActiveProducts = async () => {
+  console.log("[DEBUG] 開始載入上架商品...");
+  try {
+    console.log("[DEBUG] 呼叫 productService.getProducts");
+    const response = await productService.getProducts({
+      isActive: true,
+      pageSize: 8, // 顯示 8 個商品
+    });
+
+    console.log("[DEBUG] API 回應:", response);
+
+    // 注意：apiFetch 已經解包 response.data，所以這裡的 response 就是後端的 data 物件
+    // 後端格式: { items: [...], total: X, page: X, pageSize: X }
+    if (response && response.items) {
+      console.log("[DEBUG] 成功取得商品數量:", response.items.length);
+      console.log("[DEBUG] 商品詳細資料:", response.items);
+      // 顯示每個商品的 imageUrl
+      response.items.forEach((product: any, index: number) => {
+        console.log(`[DEBUG] 商品 ${index + 1}:`, {
+          name: product.name,
+          imageUrl: product.imageUrl,
+          price: product.price,
+        });
+      });
+      activeProducts.value = response.items.map((product: any) => ({
+        ...product,
+        quantity: 1, // 購物車用數量
+      }));
+    } else {
+      console.warn("[DEBUG] API 回應格式不正確或無資料:", response);
+    }
+  } catch (error) {
+    console.error("[ERROR] 載入上架商品失敗:", error);
+  }
+};
+
 // 載入首頁資料
 onMounted(async () => {
   try {
-    // 並發呼叫 4 個 API
-    const [carousel, member, productRecommend, announcement] =
-      await Promise.all([
-        homeBlockService.getBlocksByType("CAROUSEL").catch(() => []),
-        homeBlockService.getBlocksByType("MEMBER_BANNER").catch(() => []),
-        homeBlockService.getBlocksByType("PRODUCT_RECOMMEND").catch(() => []),
-        homeBlockService
-          .getBlocksByType("GENERAL_ANNOUNCEMENT")
-          .catch(() => []),
-      ]);
+    // 載入輪播廣告
+    const carousel = await homeBlockService
+      .getBlocksByType("CAROUSEL")
+      .catch(() => []);
 
     // 輪播廣告
     if (carousel && carousel.length > 0) {
+      console.log("[DEBUG] 輪播圖數量:", carousel.length);
+      carousel.forEach((block: any, index: number) => {
+        console.log(`[DEBUG] 輪播圖 ${index + 1}:`, {
+          title: block.title,
+          imageUrl: block.imageUrl,
+        });
+      });
       carouselBlocks.value = carousel;
     }
 
-    // 會員橫幅
-    if (member && member.length > 0 && member[0]) {
-      memberBanner.value = member[0];
-    }
-
-    // 商品推薦區
-    if (productRecommend && productRecommend.length > 0) {
-      productRecommendBlocks.value = productRecommend;
-
-      // 設定主圖（第一個區塊）
-      const mainBlock = productRecommend.find(
-        (block) =>
-          block.products && block.products.length > 0 && block.products[0]
-      );
-      if (mainBlock && mainBlock.products && mainBlock.products.length > 0) {
-        mainBanner.value = {
-          image: mainBlock.imageUrl || "",
-          href: mainBlock.linkUrl || "#",
-        };
-
-        // 設定子商品（第二個開始）
-        if (mainBlock.products.length > 1) {
-          subProducts.value = mainBlock.products.slice(1).map((product) => ({
-            name: product.name,
-            image: "", // 如果 product 有圖片則填入
-            href: `/product/${product.productId}`,
-          }));
-        }
-      }
-    }
-
-    // 公告區
-    if (announcement && announcement.length > 0) {
-      // 第一個為大公告
-      if (announcement[0]) {
-        hero.value = {
-          title: announcement[0].title || "提醒防詐騙公告",
-          href: announcement[0].linkUrl || "#",
-        };
-      }
-
-      // 後續為小公告
-      if (announcement.length > 1) {
-        tiles.value = announcement.slice(1, 3).map((block) => ({
-          title: block.title || "精選",
-          href: block.linkUrl || "#",
-        }));
-      }
-    }
-
-    // 載入隨機商品（8個）
-    try {
-      const productResponse = await productService.getProducts({
-        isActive: true,
-        pageSize: 20, // 取20個然後隨機選8個
-      });
-
-      // 後端回傳格式：{ code: "0000", data: { items: [...], total: ... } }
-      if (
-        productResponse &&
-        productResponse.data &&
-        productResponse.data.items
-      ) {
-        const allProducts = productResponse.data.items;
-
-        // 隨機打亂並取前8個
-        const shuffled = allProducts.sort(() => Math.random() - 0.5);
-        const randomProducts = shuffled.slice(0, 8);
-
-        products.value = randomProducts.map((product: any) => ({
-          name: product.name,
-          price: product.discountPrice
-            ? `$${product.discountPrice.toLocaleString()}`
-            : product.price
-            ? `$${product.price.toLocaleString()}`
-            : "9,000",
-          image: product.imageUrl ? getFullImageUrl(product.imageUrl) : "",
-          soldOut: product.isSoldOut || false,
-        }));
-      }
-    } catch (error) {
-      console.error("載入商品失敗:", error);
-    }
+    // 載入上架商品
+    await loadActiveProducts();
   } catch (error) {
     console.error("載入首頁資料失敗:", error);
   }
@@ -334,9 +259,7 @@ onMounted(async () => {
 </script>
 <style lang="scss">
 @use "@/assets/scss/home/banner" as *;
-@use "@/assets/scss/home/joinmember" as *;
-@use "@/assets/scss/home/news" as *;
-@use "@/assets/scss/home/productlist1" as *;
-@use "@/assets/scss/home/productlist2" as *;
+@use "@/assets/scss/home/activeproducts" as *;
+
 @use "@/assets/scss/home/line" as *;
 </style>

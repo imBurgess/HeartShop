@@ -196,9 +196,9 @@ const handleLoginSuccess = () => {
 // navbar 下拉選單 - 動態載入分類
 const categories = ref<Category[]>([]);
 const categoryOptions = computed<DropdownOption[]>(() => [
-  { label: "★ 店長推薦", key: "/shop/popular" },
+  { label: "人氣商品推薦", key: "/shop/popular" },
   ...categories.value.map((cat) => ({
-    label: `★ ${cat.nameZh}`,
+    label: `| ${cat.nameZh}`,
     key: `/shop/${cat.slug}`,
   })),
 ]);
@@ -225,7 +225,7 @@ const buyContentSelect = (key: string | number) => {
 };
 
 const aboutUsOptions: DropdownOption[] = [
-  { label: "★品牌故事", key: "/about/aboutus" },
+  { label: "★品牌故事", key: "/about" },
 ];
 const aboutUsSelect = (key: string | number) => {
   router.push(key as string);
@@ -285,16 +285,18 @@ const handleMemberSelect = async (key: string | number) => {
 onMounted(async () => {
   try {
     console.log("開始載入分類...");
-    const response = await categoryService.getAllCategories();
+    const response = await categoryService.getActiveCategories();
     console.log("分類 API 回傳:", response);
 
-    if (response && response.data) {
-      console.log("分類資料:", response.data);
+    if (response && Array.isArray(response)) {
+      console.log("分類資料:", response);
       // 過濾啟用中的分類並排序
-      categories.value = response.data.sort(
+      const activeCategories = response.filter((cat: any) => cat.isActive);
+      categories.value = activeCategories.sort(
         (a: any, b: any) => a.sortOrder - b.sortOrder
       );
       console.log("處理後的分類:", categories.value);
+      console.log("categoryOptions:", categoryOptions.value);
     }
   } catch (error) {
     console.error("載入分類失敗:", error);

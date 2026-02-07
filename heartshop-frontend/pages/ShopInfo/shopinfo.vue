@@ -65,6 +65,7 @@
                 商品將由門市直接出貨，如您的購物車內含有 2
                 個以上不同門市販售的商品，將會分開為您寄出，還請留意包裹抵達時間會不同。
               </li>
+              <li>我們提供超商取貨、宅配服務。出貨時間為週一至週五。</li>
             </ul>
           </div>
         </n-collapse-item>
@@ -72,11 +73,12 @@
         <!-- 退換貨方式 -->
         <n-collapse-item name="return">
           <template #header>
-            <span class="collapse-title">運送方式</span>
+            <span class="collapse-title">退換貨方式</span>
           </template>
           <div class="guide-content">
             <ul class="guide-list">
-              <li>我們提供超商取貨、宅配服務。出貨時間為週一至週五。</li>
+              <li>根據台灣消費者保護法之規定 :
+                提供您商品到貨七天鑑賞期的權益，並提醒您注意，商品退換貨時必須恢復原狀，也就是您收到商品時的全新狀態，包括 : 吊牌未剪，商品、內外包裝、文件、贈品皆須為全新未使用的狀態，否則無法退換貨，且退換貨以一次為限。</li>
             </ul>
           </div>
         </n-collapse-item>
@@ -251,3 +253,5 @@
   }
 }
 </style>
+<script setup lang="ts">
+</script>

@@ -1,14 +1,27 @@
 <!-- pages/product/[id].vue -->
 <template>
-  <main class="pdPage" v-if="product">
+  <!-- 載入中 -->
+  <main class="pdPage" v-if="isLoading">
+    <p style="text-align: center; padding: 60px 0">載入中...</p>
+  </main>
+
+  <!-- 錯誤訊息 -->
+  <main class="pdPage" v-else-if="errorMessage">
+    <p style="text-align: center; padding: 60px 0; color: #d60000">
+      {{ errorMessage }}
+    </p>
+  </main>
+
+  <!-- 商品內容 -->
+  <main class="pdPage" v-else-if="product">
     <!-- ===== 第一段：左圖 + 右側資訊 ===== -->
     <section class="pdMain">
       <!-- 左：圖片區 -->
       <div class="pdGallery">
         <!-- 小縮圖：直排 -->
-        <div class="pdThumbList">
+        <div class="pdThumbList" v-if="productImages.length > 1">
           <button
-            v-for="(img, index) in product.images"
+            v-for="(img, index) in productImages"
             :key="img"
             class="pdThumb"
             :class="{ active: index === mainImageIndex }"
@@ -28,9 +41,9 @@
       <div class="pdInfo">
         <p class="pdCode">{{ product.code }}</p>
         <h1 class="pdName">{{ product.name }}</h1>
-        <p class="pdEnName">{{ product.enName }}</p>
+        <p class="pdEnName" v-if="product.nameEn">{{ product.nameEn }}</p>
 
-        <p class="pdPrice">NT $ {{ product.price.toLocaleString() }}</p>
+        <p class="pdPrice">NT $ {{ displayPrice.toLocaleString() }}</p>
 
         <!-- （顏色區塊已移除） -->
 
@@ -38,9 +51,12 @@
         <div class="pdSelectRow">
           <label class="pdSelect">
             <span>SIZE</span>
-            <select v-model="selectedSize">
+            <select
+              v-model="selectedSize"
+              :disabled="availableSizes.length === 0"
+            >
               <option value="" disabled>請選擇尺寸</option>
-              <option v-for="size in product.sizes" :key="size" :value="size">
+              <option v-for="size in availableSizes" :key="size" :value="size">
                 {{ size }}
               </option>
             </select>
@@ -81,44 +97,50 @@
       </div>
 
       <div class="pdTabBody">
-        <p v-if="currentTab === 'detail'">
-          Polyester 100%（這裡之後可以改成從 product.detail 來）
-        </p>
-        <p v-else-if="currentTab === 'size'">
-          SIZE INFO：之後可以放尺寸表、腰圍 / 褲長等等。
-        </p>
+        <div v-if="currentTab === 'detail'">
+          <p v-if="product.description">{{ product.description }}</p>
+          <p v-else style="color: #999">暫無商品描述</p>
+        </div>
+        <div v-else-if="currentTab === 'size'">
+          <p v-if="product.sizeInfo">{{ product.sizeInfo }}</p>
+          <p v-else style="color: #999">暫無尺寸資訊</p>
+        </div>
       </div>
     </section>
 
     <!-- ===== 第三段：YOU MAY ALSO LIKE ===== -->
-    <section class="pdSection">
+    <section class="pdSection" v-if="alsoLike.length > 0">
       <h2 class="pdSectionTitle">YOU MAY ALSO LIKE</h2>
 
       <div class="pdRecommendList">
         <article
           v-for="item in alsoLike"
-          :key="item.id"
+          :key="item.productId"
           class="pdCard"
-          @click="goProduct(item.id)"
+          @click="goProduct(item.productId)"
         >
           <div class="thumb">
-            <img :src="item.image" :alt="item.name" />
+            <img :src="getFullImageUrl(item.imageUrl)" :alt="item.name" />
           </div>
           <p class="name">{{ item.name }}</p>
-          <p class="price">NT {{ item.price.toLocaleString() }}</p>
+          <p class="price">
+            NT $ {{ (item.discountPrice || item.price || 0).toLocaleString() }}
+          </p>
         </article>
       </div>
     </section>
   </main>
 
+  <!-- 無法載入商品（fallback） -->
   <main v-else class="pdPage">
-    <p>找不到此商品。</p>
+    <p style="text-align: center; padding: 60px 0">找不到此商品。</p>
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { productService, type Product } from "@/services/product";
 
 const route = useRoute();
 const router = useRouter();
@@ -126,58 +148,87 @@ const router = useRouter();
 // 取得網址中的 id：/product/1
 const id = computed(() => Number(route.params.id));
 
-// ==== 假資料：之後改成 API / 資料庫 ====
-const mockProducts = [
-  {
-    id: 1,
-    code: "AAA7-14A115",
-    name: "抽摺鬆緊版西裝褲",
-    enName: "Pintuck Wide Slacks",
-    price: 2190,
-    images: [
-      "/products/pants01-1.jpg",
-      "/products/pants01-2.jpg",
-      "/products/pants01-3.jpg",
-      "/products/pants01-4.jpg",
-    ],
-    sizes: ["S", "M", "L"],
-    image: "/products/pants01-1.jpg", // 給推薦區用的縮圖
-  },
-  {
-    id: 2,
-    code: "AAA7-14A200",
-    name: "格紋寬版西裝褲",
-    enName: "Check Wide Slacks",
-    price: 1990,
-    images: ["/products/pants02-1.jpg"],
-    sizes: ["M", "L"],
-    image: "/products/pants02-1.jpg",
-  },
-  {
-    id: 3,
-    code: "AAA7-14A300",
-    name: "素面寬版西裝褲",
-    enName: "Plain Wide Slacks",
-    price: 2190,
-    images: ["/products/pants03-1.jpg"],
-    sizes: ["S", "M", "L"],
-    image: "/products/pants03-1.jpg",
-  },
-];
+// 商品資料
+const product = ref<Product | null>(null);
+const isLoading = ref(true);
+const errorMessage = ref("");
 
-const product = computed(() => mockProducts.find((p) => p.id === id.value));
+// 推薦商品（YOU MAY ALSO LIKE）
+const alsoLike = ref<Product[]>([]);
+
+// 圖片 URL 轉換函數
+const getFullImageUrl = (imageUrl?: string): string => {
+  if (!imageUrl) return "";
+  // 如果已經是完整 URL,直接返回
+  if (imageUrl.startsWith("http")) return imageUrl;
+  // 否則加上後端 baseURL
+  const baseUrl = "http://localhost:8080";
+  return `${baseUrl}${imageUrl}`;
+};
 
 // 主要大圖 index
 const mainImageIndex = ref(0);
 const currentImage = computed(() => {
   const p = product.value;
   if (!p) return "";
-  return p.images[mainImageIndex.value] || p.images[0];
+
+  // 優先使用 images 陣列
+  if (p.images && p.images.length > 0) {
+    return getFullImageUrl(p.images[mainImageIndex.value] || p.images[0]);
+  }
+
+  // 若無 images，使用 imageUrl
+  return getFullImageUrl(p.imageUrl);
+});
+
+// 圖片列表（用於縮圖顯示）
+const productImages = computed(() => {
+  const p = product.value;
+  if (!p) return [];
+
+  // 優先使用 images 陣列
+  if (p.images && p.images.length > 0) {
+    return p.images.map((img) => getFullImageUrl(img));
+  }
+
+  // 若無 images，使用 imageUrl
+  if (p.imageUrl) {
+    return [getFullImageUrl(p.imageUrl)];
+  }
+
+  return [];
+});
+
+// 尺寸選項（從 sizeInfo 解析）
+const availableSizes = computed(() => {
+  const p = product.value;
+  if (!p || !p.sizeInfo) return [];
+
+  // sizeInfo 可能格式：
+  // 1. "S,M,L"
+  // 2. "S / M / L"
+  // 3. 其他格式，這裡簡單用逗號或斜線分割
+  return p.sizeInfo
+    .split(/[,/]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 });
 
 // 尺寸 / 數量
 const selectedSize = ref<string | "">("");
 const selectedQty = ref(1);
+
+// 顯示價格（優先顯示折扣價）
+const displayPrice = computed(() => {
+  const p = product.value;
+  if (!p) return 0;
+
+  if (p.discountPrice && p.discountPrice > 0) {
+    return p.discountPrice;
+  }
+
+  return p.price || 0;
+});
 
 // Tabs（DETAIL / SIZE INFO）
 const tabs = [
@@ -189,24 +240,80 @@ type TabKey = (typeof tabs)[number]["key"];
 
 const currentTab = ref<TabKey>("detail");
 
-// YOU MAY ALSO LIKE（這裡先簡單取「不是自己的其它商品」）
-const alsoLike = computed(() => mockProducts.filter((p) => p.id !== id.value));
+// 載入商品資料
+const loadProduct = async () => {
+  try {
+    isLoading.value = true;
+    errorMessage.value = "";
+
+    const productData = await productService.getProductById(id.value);
+
+    // apiFetch 已經提取 response.data，直接使用即可
+    if (productData) {
+      product.value = productData;
+
+      // 載入推薦商品（同分類）
+      await loadRecommendedProducts();
+    } else {
+      errorMessage.value = "找不到此商品";
+    }
+  } catch (error: any) {
+    console.error("載入商品失敗:", error);
+    errorMessage.value = error?.message || "載入商品失敗，請稍後再試";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// 載入推薦商品（同分類的其他商品）
+const loadRecommendedProducts = async () => {
+  try {
+    const p = product.value;
+    if (!p) return;
+
+    const productsData = await productService.getProducts({
+      categoryId: p.categoryId,
+      isActive: true,
+      pageSize: 10,
+    });
+
+    // productsData 格式：{ items: [...], total: ... }
+    if (productsData && productsData.items) {
+      // 過濾掉當前商品，隨機取 3 個
+      const filtered = productsData.items.filter(
+        (item: Product) => item.productId !== p.productId
+      );
+
+      const shuffled = filtered.sort(() => Math.random() - 0.5);
+      alsoLike.value = shuffled.slice(0, 3);
+    }
+  } catch (error) {
+    console.error("載入推薦商品失敗:", error);
+    // 不顯示錯誤，推薦商品載入失敗不影響主頁面
+  }
+};
 
 // 加入購物車
 const handleAddToBag = () => {
   const p = product.value;
   if (!p) return;
+
   if (!selectedSize.value) {
     window.alert("請先選擇尺寸");
     return;
   }
 
   console.log("加入購物車：", {
-    id: p.id,
+    id: p.productId,
     name: p.name,
     size: selectedSize.value,
     qty: selectedQty.value,
+    price: displayPrice.value,
   });
+
+  window.alert(
+    `已加入購物車：${p.name} (${selectedSize.value}) x ${selectedQty.value}`
+  );
 
   // 之後可以在這裡呼叫後端 API 或丟到 Pinia
 };
@@ -214,7 +321,17 @@ const handleAddToBag = () => {
 // 跳到其他商品
 const goProduct = (pid: number) => {
   router.push(`/product/${pid}`);
+  // 切換商品後重新載入資料
+  mainImageIndex.value = 0;
+  selectedSize.value = "";
+  selectedQty.value = 1;
+  loadProduct();
 };
+
+// 組件掛載時載入商品
+onMounted(() => {
+  loadProduct();
+});
 </script>
 
 <style scoped lang="scss">

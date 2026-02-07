@@ -115,12 +115,13 @@ const currentBanner = computed(() => {
   // 從 categories 中找對應的分類，使用其 bannerUrl
   const category = categories.value.find((c) => c.slug === slug.value);
   if (category?.bannerUrl) {
-    const baseUrl =
-      import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+    // 使用 VITE_API_HOST（只包含 host，不含 /api 路徑）
+    // 因為 bannerUrl 已經包含 /api/uploads/ 前綴
+    const apiHost = import.meta.env.VITE_API_HOST || "http://localhost:8080";
     return {
       src: category.bannerUrl.startsWith("http")
         ? category.bannerUrl
-        : `${baseUrl}${category.bannerUrl}`,
+        : `${apiHost}${category.bannerUrl}`,
       alt: `${category.nameZh} Banner`,
     };
   }

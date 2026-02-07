@@ -1,0 +1,4 @@
+-- 執行此 SQL 來套用資料庫遷移
+-- 請使用 psql 或其他 PostgreSQL 客戶端執行
+
+-- 檔案位置: HeartShop-Spring/HeartShop/src/main/resources/db/migration/V003__add_inventory_management.sql

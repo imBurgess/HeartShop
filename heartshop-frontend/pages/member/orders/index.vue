@@ -124,7 +124,16 @@ import { useRouter } from "vue-router";
 import { orderService, type Order } from "~/services/order";
 
 const router = useRouter();
-const memberName = ref("黃風睿");
+
+// 讀取 memberInfo cookie
+const memberInfoCookie = useCookie<{
+  memberId: number;
+  email: string;
+  name: string;
+} | null>("memberInfo");
+
+// 顯示會員名稱（從 cookie 讀取，如果沒有則顯示預設值）
+const memberName = computed(() => memberInfoCookie.value?.name || "訪客");
 
 // menu
 const activeKey = ref<string | null>("orders");
