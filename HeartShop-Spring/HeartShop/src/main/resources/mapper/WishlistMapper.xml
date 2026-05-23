@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.HeartShop.mapper.WishlistMapper">
+
+    <select id="findByMemberId" resultType="com.HeartShop.entity.Wishlist">
+        SELECT
+            w.wishlist_id     AS wishlistId,
+            w.member_id       AS memberId,
+            w.product_id      AS productId,
+            w.created_at      AS createdAt,
+            p.name            AS productName,
+            p.name_en         AS productNameEn,
+            p.code            AS productCode,
+            p.price           AS price,
+            p.discount_price  AS discountPrice,
+            (SELECT image_url FROM product_image pi
+             WHERE pi.product_id = p.product_id
+             ORDER BY sort_order ASC LIMIT 1) AS productImage
+        FROM wishlist w
+        JOIN product p ON w.product_id = p.product_id
+        WHERE w.member_id = #{memberId}
+        ORDER BY w.created_at DESC
+    </select>
+
+    <select id="existsByMemberAndProduct" resultType="int">
+        SELECT COUNT(1) FROM wishlist
+        WHERE member_id = #{memberId} AND product_id = #{productId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO wishlist (member_id, product_id)
+        VALUES (#{memberId}, #{productId})
+        ON CONFLICT (member_id, product_id) DO NOTHING
+    </insert>
+
+    <delete id="deleteByMemberAndProduct">
+        DELETE FROM wishlist
+        WHERE member_id = #{memberId} AND product_id = #{productId}
+    </delete>
+
+</mapper>

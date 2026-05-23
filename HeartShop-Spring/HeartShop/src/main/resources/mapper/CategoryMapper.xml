@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.HeartShop.mapper.CategoryMapper">
+    
+    <!-- ResultMap: 將資料庫欄位對應到 Java Entity -->
+    <resultMap id="CategoryResultMap" type="com.HeartShop.entity.Category">
+        <id property="categoryId" column="category_id"/>
+        <result property="slug" column="slug"/>
+        <result property="nameZh" column="name_zh"/>
+        <result property="nameEn" column="name_en"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="isActive" column="is_active"/>
+        <result property="bannerUrl" column="banner_url"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+    
+    <!-- 查詢所有分類 -->
+    <select id="selectAllCategories" resultMap="CategoryResultMap">
+        SELECT category_id, slug, name_zh, name_en, parent_id, sort_order, is_active, banner_url, created_at
+        FROM category
+        <where>
+            <if test="isActive != null">
+                is_active = #{isActive}
+            </if>
+        </where>
+        ORDER BY sort_order ASC, category_id ASC
+    </select>
+    
+    <!-- 根據 ID 查詢分類 -->
+    <select id="selectCategoryById" resultMap="CategoryResultMap">
+        SELECT category_id, slug, name_zh, name_en, parent_id, sort_order, is_active, banner_url, created_at
+        FROM category
+        WHERE category_id = #{id}
+    </select>
+    
+    <!-- 根據父分類 ID 查詢子分類 -->
+    <select id="selectCategoriesByParentId" resultMap="CategoryResultMap">
+        SELECT category_id, slug, name_zh, name_en, parent_id, sort_order, is_active, banner_url, created_at
+        FROM category
+        <where>
+            <if test="parentId == null">
+                parent_id IS NULL
+            </if>
+            <if test="parentId != null">
+                parent_id = #{parentId}
+            </if>
+        </where>
+        ORDER BY sort_order ASC, category_id ASC
+    </select>
+    
+    <!-- 新增分類 -->
+    <insert id="insertCategory" useGeneratedKeys="true" keyProperty="categoryId">
+        INSERT INTO category (slug, name_zh, name_en, parent_id, sort_order, is_active, banner_url, created_at)
+        VALUES (
+            #{slug},
+            #{nameZh},
+            #{nameEn},
+            #{parentId},
+            #{sortOrder},
+            #{isActive},
+            #{bannerUrl},
+            NOW()
+        )
+    </insert>
+    
+    <!-- 更新分類 -->
+    <update id="updateCategory">
+        UPDATE category
+        <set>
+            <if test="slug != null">slug = #{slug},</if>
+            <if test="nameZh != null">name_zh = #{nameZh},</if>
+            <if test="nameEn != null">name_en = #{nameEn},</if>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+            <!-- bannerUrl 允許空字串（清除 banner）或有效 URL -->
+            <if test="bannerUrl != null">banner_url = #{bannerUrl},</if>
+            created_at = created_at
+        </set>
+        WHERE category_id = #{categoryId}
+    </update>
+    
+    <!-- 刪除分類 -->
+    <delete id="deleteCategory">
+        DELETE FROM category WHERE category_id = #{id}
+    </delete>
+    
+    <!-- 檢查分類名稱是否重複 (檢查 slug) -->
+    <select id="countByName" resultType="int">
+        SELECT COUNT(*)
+        FROM category
+        WHERE slug = #{name}
+        <if test="excludeId != null">
+            AND category_id != #{excludeId}
+        </if>
+    </select>
+    
+</mapper>

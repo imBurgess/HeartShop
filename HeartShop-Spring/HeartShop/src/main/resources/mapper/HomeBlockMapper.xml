@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.HeartShop.mapper.HomeBlockMapper">
+
+    <!-- ResultMap: home_block 表 -->
+    <resultMap id="HomeBlockResultMap" type="com.HeartShop.entity.HomeBlock">
+        <id property="blockId" column="block_id"/>
+        <result property="type" column="type"/>
+        <result property="title" column="title"/>
+        <result property="subtitle" column="subtitle"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="linkUrl" column="link_url"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="isActive" column="is_active"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 依類型查詢啟用中的區塊 -->
+    <select id="selectActiveByType" resultMap="HomeBlockResultMap">
+        SELECT *
+        FROM home_block
+        WHERE type = #{type}
+          AND is_active = true
+          AND (start_time IS NULL OR start_time &lt;= NOW())
+          AND (end_time IS NULL OR end_time &gt;= NOW())
+        ORDER BY sort_order ASC, created_at DESC
+    </select>
+
+    <!-- 依 ID 查詢 -->
+    <select id="selectById" resultMap="HomeBlockResultMap">
+        SELECT *
+        FROM home_block
+        WHERE block_id = #{blockId}
+    </select>
+
+    <!-- 查詢所有區塊 -->
+    <select id="selectAll" resultMap="HomeBlockResultMap">
+        SELECT *
+        FROM home_block
+        ORDER BY type ASC, sort_order ASC, created_at DESC
+    </select>
+
+    <!-- 新增區塊 -->
+    <insert id="insertHomeBlock" useGeneratedKeys="true" keyProperty="blockId">
+        INSERT INTO home_block (
+            type, title, subtitle, image_url, link_url,
+            sort_order, is_active, start_time, end_time
+        ) VALUES (
+            #{type}, #{title}, #{subtitle}, #{imageUrl}, #{linkUrl},
+            #{sortOrder}, #{isActive}, #{startTime}, #{endTime}
+        )
+    </insert>
+
+    <!-- 更新區塊 -->
+    <update id="updateHomeBlock">
+        UPDATE home_block
+        <set>
+            <if test="type != null">type = #{type},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="subtitle != null">subtitle = #{subtitle},</if>
+            <if test="imageUrl != null">image_url = #{imageUrl},</if>
+            <if test="linkUrl != null">link_url = #{linkUrl},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            updated_at = NOW()
+        </set>
+        WHERE block_id = #{blockId}
+    </update>
+
+    <!-- 刪除區塊 -->
+    <delete id="deleteById">
+        DELETE FROM home_block
+        WHERE block_id = #{blockId}
+    </delete>
+
+</mapper>

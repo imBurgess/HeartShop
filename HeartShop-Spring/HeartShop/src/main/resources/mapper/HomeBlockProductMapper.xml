@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.HeartShop.mapper.HomeBlockProductMapper">
+
+    <!-- ResultMap: home_block_product 表 -->
+    <resultMap id="HomeBlockProductResultMap" type="com.HeartShop.entity.HomeBlockProduct">
+        <id property="id" column="id"/>
+        <result property="blockId" column="block_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 依區塊 ID 查詢關聯商品 -->
+    <select id="selectByBlockId" resultMap="HomeBlockProductResultMap">
+        SELECT *
+        FROM home_block_product
+        WHERE block_id = #{blockId}
+        ORDER BY sort_order ASC
+    </select>
+
+    <!-- 批次新增關聯 -->
+    <insert id="insertBatch">
+        INSERT INTO home_block_product (block_id, product_id, sort_order)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.blockId}, #{item.productId}, #{item.sortOrder})
+        </foreach>
+    </insert>
+
+    <!-- 刪除區塊的所有關聯 -->
+    <delete id="deleteByBlockId">
+        DELETE FROM home_block_product
+        WHERE block_id = #{blockId}
+    </delete>
+
+</mapper>

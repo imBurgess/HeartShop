@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.HeartShop.mapper.ProductQaMapper">
+
+    <resultMap id="QaResultMap" type="com.HeartShop.entity.ProductQa">
+        <id     property="qaId"        column="qa_id"/>
+        <result property="productId"   column="product_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="memberId"    column="member_id"/>
+        <result property="memberName"  column="member_name"/>
+        <result property="question"    column="question"/>
+        <result property="answer"      column="answer"/>
+        <result property="isPublic"    column="is_public"/>
+        <result property="createdAt"   column="created_at"/>
+        <result property="answeredAt"  column="answered_at"/>
+    </resultMap>
+
+    <select id="findByProductId" resultMap="QaResultMap">
+        SELECT q.qa_id, q.product_id,
+               p.name AS product_name,
+               q.member_id,
+               m.name AS member_name,
+               q.question, q.answer, q.is_public,
+               q.created_at, q.answered_at
+        FROM product_qa q
+        LEFT JOIN product p ON q.product_id = p.product_id
+        LEFT JOIN member  m ON q.member_id  = m.member_id
+        WHERE q.product_id = #{productId}
+          AND q.is_public = true
+        ORDER BY q.created_at DESC
+    </select>
+
+    <select id="findByMemberId" resultMap="QaResultMap">
+        SELECT q.qa_id, q.product_id,
+               p.name AS product_name,
+               q.member_id,
+               m.name AS member_name,
+               q.question, q.answer, q.is_public,
+               q.created_at, q.answered_at
+        FROM product_qa q
+        LEFT JOIN product p ON q.product_id = p.product_id
+        LEFT JOIN member  m ON q.member_id  = m.member_id
+        WHERE q.member_id = #{memberId}
+        ORDER BY q.created_at DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="qaId">
+        INSERT INTO product_qa (product_id, member_id, question, is_public, created_at)
+        VALUES (#{productId}, #{memberId}, #{question}, true, CURRENT_TIMESTAMP)
+    </insert>
+
+    <!-- Admin: 列表查詢 -->
+    <select id="adminFindAll" resultMap="QaResultMap">
+        SELECT q.qa_id, q.product_id,
+               p.name AS product_name,
+               q.member_id,
+               m.name AS member_name,
+               q.question, q.answer, q.is_public,
+               q.created_at, q.answered_at
+        FROM product_qa q
+        LEFT JOIN product p ON q.product_id = p.product_id
+        LEFT JOIN member  m ON q.member_id  = m.member_id
+        <where>
+            <if test="answered != null and answered == true">
+                q.answer IS NOT NULL
+            </if>
+            <if test="answered != null and answered == false">
+                q.answer IS NULL
+            </if>
+        </where>
+        ORDER BY q.created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="adminCountAll" resultType="long">
+        SELECT COUNT(*) FROM product_qa q
+        <where>
+            <if test="answered != null and answered == true">
+                q.answer IS NOT NULL
+            </if>
+            <if test="answered != null and answered == false">
+                q.answer IS NULL
+            </if>
+        </where>
+    </select>
+
+    <!-- Admin: 回覆問題 -->
+    <update id="updateAnswer">
+        UPDATE product_qa
+        SET answer = #{answer}, answered_at = CURRENT_TIMESTAMP
+        WHERE qa_id = #{qaId}
+    </update>
+
+</mapper>

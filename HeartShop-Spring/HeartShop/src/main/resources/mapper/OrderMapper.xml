@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.HeartShop.mapper.OrderMapper">
+
+    <resultMap id="OrderResultMap" type="com.HeartShop.entity.Order">
+        <id property="orderId" column="order_id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="memberId" column="member_id"/>
+        <result property="orderDate" column="order_date"/>
+        <result property="shipDate" column="ship_date"/>
+        <result property="status" column="status"/>
+        <result property="paymentMethod" column="payment_method"/>
+        <result property="shippingMethod" column="shipping_method"/>
+        <result property="receiverName" column="receiver_name"/>
+        <result property="receiverPhone" column="receiver_phone"/>
+        <result property="receiverAddress" column="receiver_address"/>
+        <result property="subtotalAmount" column="subtotal_amount"/>
+        <result property="shippingFee" column="shipping_fee"/>
+        <result property="discountAmount" column="discount_amount"/>
+        <result property="bonusUsed" column="bonus_used"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="remark" column="remark"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <collection property="items" ofType="com.HeartShop.entity.OrderItem" column="order_id" select="findOrderItemsByOrderId" fetchType="eager"/>
+    </resultMap>
+
+    <insert id="insertOrder" useGeneratedKeys="true" keyProperty="orderId" keyColumn="order_id">
+        INSERT INTO "orders" (
+            order_no, member_id, status,
+            payment_method, shipping_method,
+            receiver_name, receiver_phone, receiver_address,
+            subtotal_amount, shipping_fee, discount_amount, bonus_used, total_amount, remark
+        ) VALUES (
+            #{orderNo}, #{memberId}, #{status},
+            #{paymentMethod}, #{shippingMethod},
+            #{receiverName}, #{receiverPhone}, #{receiverAddress},
+            #{subtotalAmount}, #{shippingFee}, #{discountAmount}, #{bonusUsed}, #{totalAmount}, #{remark}
+        )
+    </insert>
+
+    <insert id="insertOrderItems">
+        INSERT INTO "order_item" (
+            order_id, product_id, product_code, product_name, product_image, size_name, unit_price, quantity, subtotal
+        )
+        VALUES
+        <foreach collection="items" item="item" separator=",">
+            (
+                #{item.orderId}, #{item.productId}, #{item.productCode}, #{item.productName}, 
+                #{item.productImage}, #{item.sizeName}, #{item.unitPrice}, #{item.quantity}, #{item.subtotal}
+            )
+        </foreach>
+    </insert>
+
+    <select id="findByOrderNo" resultMap="OrderResultMap">
+        SELECT * FROM "orders" WHERE order_no = #{orderNo}
+    </select>
+    
+    <select id="findOrderItemsByOrderId" resultType="com.HeartShop.entity.OrderItem">
+        SELECT 
+            order_item_id as orderItemId, order_id as orderId, product_id as productId,
+            product_code as productCode, product_name as productName, product_image as productImage,
+            size_name as sizeName, unit_price as unitPrice, quantity, subtotal, created_at as createdAt
+        FROM "order_item" 
+        WHERE order_id = #{orderId}
+    </select>
+
+    <select id="findByMemberId" resultMap="OrderResultMap">
+        SELECT * FROM "orders" WHERE member_id = #{memberId} ORDER BY created_at DESC
+    </select>
+
+    <!-- Admin: 列表查詢（不載 items） -->
+    <select id="adminFindAll" resultType="com.HeartShop.entity.Order">
+        SELECT order_id as orderId, order_no as orderNo, member_id as memberId,
+               receiver_name as receiverName, receiver_phone as receiverPhone,
+               receiver_address as receiverAddress,
+               total_amount as totalAmount, status,
+               payment_method as paymentMethod, shipping_method as shippingMethod,
+               created_at as createdAt, updated_at as updatedAt
+        FROM "orders"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (order_no ILIKE '%' || #{keyword} || '%'
+                 OR receiver_name ILIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND created_at >= CAST(#{startDate} AS TIMESTAMP)
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND created_at &lt; CAST(#{endDate} AS TIMESTAMP) + INTERVAL '1 day'
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="adminCountAll" resultType="long">
+        SELECT COUNT(*) FROM "orders"
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (order_no ILIKE '%' || #{keyword} || '%'
+                 OR receiver_name ILIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND created_at >= CAST(#{startDate} AS TIMESTAMP)
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND created_at &lt; CAST(#{endDate} AS TIMESTAMP) + INTERVAL '1 day'
+            </if>
+        </where>
+    </select>
+
+    <update id="adminUpdateStatus">
+        UPDATE "orders" SET status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE order_no = #{orderNo}
+    </update>
+
+    <delete id="adminDeleteOrder">
+        DELETE FROM "orders" WHERE order_no = #{orderNo}
+    </delete>
+
+    <!-- 不載入 items，只查訂單主檔，供所有權驗證用 -->
+    <select id="findByOrderNoSimple" resultType="com.HeartShop.entity.Order">
+        SELECT order_id as orderId, order_no as orderNo, member_id as memberId,
+               status, total_amount as totalAmount, created_at as createdAt
+        FROM "orders" WHERE order_no = #{orderNo}
+    </select>
+
+    <!-- 只允許 pending / FAILED 狀態且屬於該會員才能取消 -->
+    <update id="cancelOrderForMember">
+        UPDATE "orders"
+        SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP
+        WHERE order_no = #{orderNo}
+          AND member_id = #{memberId}
+          AND status IN ('pending', 'FAILED')
+    </update>
+
+    <update id="updateOrderStatus">
+        UPDATE "orders"
+        SET status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE order_no = #{orderNo}
+    </update>
+
+</mapper>

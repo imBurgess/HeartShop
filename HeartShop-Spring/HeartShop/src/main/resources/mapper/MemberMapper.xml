@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.HeartShop.mapper.MemberMapper">
+
+    <!-- ResultMap：DB 欄位 -> Java 欄位 -->
+    <resultMap id="MemberResultMap" type="com.HeartShop.entity.Member">
+        <id property="memberId" column="member_id"/>
+        <result property="email" column="email"/>
+        <result property="password" column="password"/>
+        <result property="name" column="name"/>
+        <result property="phone" column="phone"/>
+        <result property="birthday" column="birthday"/>
+        <result property="address" column="address"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="subscribeEdm" column="subscribe_edm"/>
+        <result property="bonusPoints" column="bonus_points"/>
+        <result property="totalOrders" column="total_orders"/>
+        <result property="totalSpent" column="total_spent"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 根據 Email 查詢會員 -->
+    <select id="selectByEmail" resultMap="MemberResultMap">
+        SELECT member_id, email, password, name, phone, birthday, address,
+               role, status, subscribe_edm, bonus_points, total_orders, total_spent,
+               created_at, updated_at
+        FROM member
+        WHERE email = #{email}
+    </select>
+
+    <!-- 根據 name 查詢會員（用於 username 登入）-->
+    <select id="selectByName" resultMap="MemberResultMap">
+        SELECT member_id, email, password, name, phone, birthday, address,
+               role, status, subscribe_edm, bonus_points, total_orders, total_spent,
+               created_at, updated_at
+        FROM member
+        WHERE name = #{name}
+        LIMIT 1
+    </select>
+
+    <!-- 根據 ID 查詢會員 -->
+    <select id="selectById" resultMap="MemberResultMap">
+        SELECT member_id, email, password, name, phone, birthday, address,
+               role, status, subscribe_edm, bonus_points, total_orders, total_spent,
+               created_at, updated_at
+        FROM member
+        WHERE member_id = #{memberId}
+    </select>
+
+    <!-- 新增會員 -->
+    <insert id="insertMember" useGeneratedKeys="true" keyProperty="memberId">
+        INSERT INTO member (email, password, name, role, status, subscribe_edm, created_at, updated_at)
+        VALUES (#{email}, #{password}, #{name}, #{role}, #{status}, #{subscribeEdm}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+
+    <!-- 更新會員資料（不包含 email 和 password）-->
+    <update id="updateProfile">
+        UPDATE member
+        SET name = #{name},
+            phone = #{phone},
+            birthday = #{birthday},
+            address = #{address},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE member_id = #{memberId}
+    </update>
+
+    <!-- 更新會員密碼 -->
+    <update id="updatePassword">
+        UPDATE member
+        SET password = #{password},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE member_id = #{memberId}
+    </update>
+
+    <!-- Admin: 列表查詢 -->
+    <select id="adminFindAll" resultMap="MemberResultMap">
+        SELECT member_id, email, name, phone, role, status,
+               bonus_points, total_orders, total_spent, created_at, updated_at
+        FROM member
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (name ILIKE '%' || #{keyword} || '%'
+                 OR email ILIKE '%' || #{keyword} || '%'
+                 OR phone ILIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- Admin: 計算總數 -->
+    <select id="adminCountAll" resultType="long">
+        SELECT COUNT(*) FROM member
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (name ILIKE '%' || #{keyword} || '%'
+                 OR email ILIKE '%' || #{keyword} || '%'
+                 OR phone ILIKE '%' || #{keyword} || '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!-- Admin: 更新會員狀態 -->
+    <update id="adminUpdateStatus">
+        UPDATE member
+        SET status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE member_id = #{memberId}
+    </update>
+
+    <!-- Admin: 更新會員權限 -->
+    <update id="adminUpdateRole">
+        UPDATE member
+        SET role = #{role}, updated_at = CURRENT_TIMESTAMP
+        WHERE member_id = #{memberId}
+    </update>
+
+    <!-- Admin: 刪除會員 -->
+    <delete id="adminDeleteMember">
+        DELETE FROM member WHERE member_id = #{memberId}
+    </delete>
+
+</mapper>
