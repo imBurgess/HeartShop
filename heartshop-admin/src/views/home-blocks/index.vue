@@ -355,25 +355,18 @@ const handleCreate = () => {
 
 // 圖片上傳完成
 const handleUploadFinish = ({ event }: any) => {
-  console.log("[Upload] 上傳完成事件觸發", event);
-
   const responseText = (event?.target as XMLHttpRequest)?.response || "{}";
-  console.log("[Upload] 後端回應原始內容:", responseText);
-
   try {
     const response = JSON.parse(responseText);
-    console.log("[Upload] 解析後的回應:", response);
-
     if (response.code === "0000" && response.data && response.data.url) {
       formData.value.imageUrl = response.data.url;
-      console.log("[Upload] 圖片 URL 已設定:", formData.value.imageUrl);
       message.success("圖片上傳成功");
     } else {
-      console.error("[Upload] 回應格式不符預期:", response);
+      console.error("圖片上傳回應格式不符:", response);
       message.error(response.message || "圖片上傳失敗");
     }
   } catch (error) {
-    console.error("[Upload] 解析回應失敗:", error);
+    console.error("解析上傳回應失敗:", error);
     message.error("圖片上傳失敗：無法解析伺服器回應");
   }
 };
@@ -424,9 +417,6 @@ const handleEdit = (row: any) => {
 const handleSubmit = async () => {
   submitting.value = true;
   try {
-    console.log("[Submit] 準備提交，formData:", formData.value);
-
-    // 驗證必填欄位
     if (!formData.value.imageUrl) {
       message.warning("請上傳圖片");
       submitting.value = false;
@@ -444,8 +434,6 @@ const handleSubmit = async () => {
       startTime: formData.value.startTime,
       endTime: formData.value.endTime,
     };
-
-    console.log("[Submit] 提交的 payload:", payload);
 
     // 處理商品 ID
     if (formData.value.type === "PRODUCT_RECOMMEND" && productIdsInput.value) {

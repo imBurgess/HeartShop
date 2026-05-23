@@ -12,7 +12,7 @@
     .section-title {
       font-size: 1.75rem;
       font-weight: 700;
-      color: #000000;
+      color: #353535;
       margin: 0;
       letter-spacing: 0.05em;
     }
@@ -29,7 +29,7 @@
       padding: 0.75rem 3rem;
       border: 2px solid #000000;
       background: transparent;
-      color: #000000;
+      color: #353535;
       text-decoration: none;
       font-size: 0.875rem;
       font-weight: 600;
@@ -64,8 +64,8 @@
 
     &:hover {
       transform: translateY(-8px);
-      box-shadow: 0 12px 24px rgba(0, 212, 255, 0.3);
-      border-color: rgba(0, 212, 255, 0.5);
+      box-shadow: 0 12px 24px rgba(192, 195, 152, 0.3);
+      border-color: rgba(175, 174, 149, 0.559);
       background: rgba(255, 255, 255, 0.08);
 
       .product-image {
@@ -121,7 +121,7 @@
       .product-name {
         font-size: 13px;
         font-weight: 600;
-        color: #000000;
+        color: #353535;
         margin: 0 0 6px 0;
         line-height: 1.4;
         min-height: auto;
@@ -138,7 +138,7 @@
         .price {
           font-size: 13px;
           font-weight: 600;
-          color: #000000;
+          color: #353535;
         }
 
         .actions {
@@ -167,7 +167,7 @@
           min-width: 20px;
           text-align: center;
           font-size: 13px;
-          color: #000000;
+          color: #353535;
         }
 
         .cart-btn {
@@ -210,7 +210,7 @@
   .no-products {
     text-align: center;
     padding: 3rem 1rem;
-    color: rgba(255, 255, 255, 0.5);
+    color: #353535;
     font-size: 1.1rem;
   }
 }

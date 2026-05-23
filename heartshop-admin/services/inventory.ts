@@ -1,5 +1,25 @@
 // 庫存管理 API 服務
-import type { Product } from "./product";
+
+/** 商品基本資料（與後端 ProductDTO 對應） */
+export interface Product {
+  productId: number;
+  code?: string;
+  name: string;
+  nameEn?: string;
+  description?: string;
+  sizeInfo?: string;
+  price?: number;
+  discountPrice?: number;
+  stock?: number;
+  isActive?: boolean;
+  isNew?: boolean;
+  categoryId?: number;
+  imageUrl?: string;
+  images?: string[];
+  tags?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export interface InventoryQueryParams {
   categoryId?: number;
@@ -60,8 +80,9 @@ export const inventoryApi = {
       }, {} as Record<string, string>)
     ).toString();
 
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
     const response = await fetch(
-      `http://localhost:8080/api/inventory?${queryString}`,
+      `${apiBase}/api/inventory?${queryString}`,
       {
         method: "GET",
         headers: {
@@ -80,7 +101,8 @@ export const inventoryApi = {
 
   // 取得低庫存警示
   async getLowStockAlerts() {
-    const response = await fetch("http://localhost:8080/api/inventory/alerts", {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+    const response = await fetch(`${apiBase}/api/inventory/alerts`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -97,8 +119,9 @@ export const inventoryApi = {
 
   // 調整庫存
   async adjustStock(productId: number, request: InventoryAdjustRequest) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
     const response = await fetch(
-      `http://localhost:8080/api/inventory/${productId}/adjust`,
+      `${apiBase}/api/inventory/${productId}/adjust`,
       {
         method: "POST",
         headers: {
@@ -122,8 +145,9 @@ export const inventoryApi = {
     page: number = 1,
     pageSize: number = 20
   ) {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
     const response = await fetch(
-      `http://localhost:8080/api/inventory/${productId}/logs?page=${page}&pageSize=${pageSize}`,
+      `${apiBase}/api/inventory/${productId}/logs?page=${page}&pageSize=${pageSize}`,
       {
         method: "GET",
         headers: {

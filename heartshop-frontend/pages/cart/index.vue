@@ -8,12 +8,12 @@
 
       <div class="step" @click="$router.push('/cart/confirm')">
         <div class="circle">02</div>
-        <div class="label">SHIPPING & PAYMENT<br />結帳資料與付款方式</div>
+        <div class="label">ORDER CONFIRMATION<br />訂單確認&結帳</div>
       </div>
 
-      <div class="step" @click="$router.push('/cart/payment')">
+      <div class="step" @click="$router.push('/cart/checkout')">
         <div class="circle">03</div>
-        <div class="label">COMPLETED<br />訂單完成</div>
+        <div class="label">ORDER PAYMENT<br />訂單完成</div>
       </div>
     </section>
 
@@ -31,7 +31,7 @@
 
       <!-- 有商品 -->
       <div v-else class="cartItemList">
-        <div v-for="item in cartItems" :key="item.id" class="cartItem">
+        <div v-for="item in cartItems" :key="item.cartItemId" class="cartItem">
           <!-- 商品圖片 -->
           <div class="itemThumb">
             <n-image
@@ -50,7 +50,7 @@
 
             <div class="itemPriceRow">
               <span class="itemPrice">
-                ¥{{ item.price.toLocaleString() }}
+                ${{ item.price.toLocaleString() }}
               </span>
               <span class="itemTax">含稅</span>
             </div>
@@ -64,7 +64,7 @@
                 </n-button>
 
                 <n-input-number
-                  v-model:value="item.qty"
+                  v-model:value="item.quantity"
                   size="small"
                   :min="1"
                   :show-button="false"
@@ -79,9 +79,10 @@
 
             <!-- 刪除 -->
             <div class="itemRemoveRow">
-              <n-button text size="tiny" @click="removeItem(item.id)">
+              <button class="removeBtn" @click="removeItem(item.cartItemId)">
+                <span class="removeIcon">🗑</span>
                 從購物車中刪除
-              </n-button>
+              </button>
             </div>
           </div>
 
@@ -89,7 +90,7 @@
           <div class="itemSubtotal">
             小計<br />
             <span class="itemSubtotalPrice">
-              ¥{{ (item.price * item.qty).toLocaleString() }}
+              ${{ (item.price * item.quantity).toLocaleString() }}
             </span>
           </div>
         </div>
@@ -109,60 +110,48 @@
       </div>
       <div class="summaryRow">
         <span>商品總金額：</span>
-        <span>¥{{ totalAmount.toLocaleString() }} 含稅</span>
+        <span>${{ totalAmount.toLocaleString() }} 含稅</span>
       </div>
     </n-card>
 
     <!-- 底部按鈕 -->
     <section class="cartActions" v-if="cartItems.length > 0">
       <n-space justify="center" size="large">
-        <n-button round secondary> 繼續購物 </n-button>
-        <n-button round type="primary"> 繼續購買程序 </n-button>
+        <n-button round secondary @click="$router.push('/shop/popular')">
+          繼續購物
+        </n-button>
+        <n-button round type="primary" @click="$router.push('/cart/confirm')">
+          繼續購買程序
+        </n-button>
       </n-space>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { onMounted } from "vue";
+import { useCartStore } from "@/stores/cart";
+import { storeToRefs } from "pinia";
 
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  qty: number;
-  image: string;
-}
+const cartStore = useCartStore();
+const { items: cartItems, totalQty, totalAmount } = storeToRefs(cartStore);
 
-// 先用假資料，之後可以改成從 Pinia / API 取得
-const cartItems = ref<CartItem[]>([
-  {
-    id: 1,
-    name: "WAN!WAN! PVC KeyChain Green",
-    price: 1800,
-    qty: 1,
-    image: "/img/sample-keychain.png",
-  },
-]);
+onMounted(() => {
+  cartStore.fetchCart();
+});
 
-const totalQty = computed(() =>
-  cartItems.value.reduce((sum, item) => sum + item.qty, 0)
-);
-
-const totalAmount = computed(() =>
-  cartItems.value.reduce((sum, item) => sum + item.price * item.qty, 0)
-);
-
-const increaseQty = (item: CartItem) => {
-  item.qty++;
+const increaseQty = (item: any) => {
+  cartStore.updateQuantity(item.cartItemId, item.quantity + 1);
 };
 
-const decreaseQty = (item: CartItem) => {
-  if (item.qty > 1) item.qty--;
+const decreaseQty = (item: any) => {
+  if (item.quantity > 1) {
+    cartStore.updateQuantity(item.cartItemId, item.quantity - 1);
+  }
 };
 
 const removeItem = (id: number) => {
-  cartItems.value = cartItems.value.filter((item) => item.id !== id);
+  cartStore.removeItem(id);
 };
 </script>
 
@@ -239,7 +228,7 @@ const removeItem = (id: number) => {
 .emptyState {
   padding: 32px 24px;
   text-align: center;
-  color: #999;
+  color: #353535;
 }
 
 .cartItemList {
@@ -283,7 +272,7 @@ const removeItem = (id: number) => {
 
 .itemTax {
   font-size: 12px;
-  color: #999;
+  color: #353535;
   margin-left: 4px;
 }
 
@@ -296,6 +285,31 @@ const removeItem = (id: number) => {
 
 .itemRemoveRow {
   font-size: 12px;
+  margin-top: 6px;
+}
+
+.removeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #c0392b;
+  background: transparent;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+
+  &:hover {
+    background: #c0392b;
+    color: #fff;
+  }
+}
+
+.removeIcon {
+  font-size: 13px;
+  line-height: 1;
 }
 
 .itemSubtotal {

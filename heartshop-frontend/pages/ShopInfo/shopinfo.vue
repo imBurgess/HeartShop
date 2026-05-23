@@ -77,8 +77,12 @@
           </template>
           <div class="guide-content">
             <ul class="guide-list">
-              <li>根據台灣消費者保護法之規定 :
-                提供您商品到貨七天鑑賞期的權益，並提醒您注意，商品退換貨時必須恢復原狀，也就是您收到商品時的全新狀態，包括 : 吊牌未剪，商品、內外包裝、文件、贈品皆須為全新未使用的狀態，否則無法退換貨，且退換貨以一次為限。</li>
+              <li>
+                根據台灣消費者保護法之規定 :
+                提供您商品到貨七天鑑賞期的權益，並提醒您注意，商品退換貨時必須恢復原狀，也就是您收到商品時的全新狀態，包括
+                :
+                吊牌未剪，商品、內外包裝、文件、贈品皆須為全新未使用的狀態，否則無法退換貨，且退換貨以一次為限。
+              </li>
             </ul>
           </div>
         </n-collapse-item>
@@ -205,8 +209,8 @@
 
     .guide-collapse {
       :deep(.n-collapse-item__header) {
-        background-color: #633f29b3;
-        --n-arrow-color: #ffffff;
+        background-color: #bdbbb0;
+        --n-arrow-color: #353535;
         cursor: pointer;
         user-select: none;
         align-items: center;
@@ -218,13 +222,13 @@
       .collapse-title {
         font-size: large;
         letter-spacing: 0.08em;
-        color: #ffffff;
+        color: #353535;
       }
 
       /* 內容區 */
       :deep(.n-collapse-item__content-inner) {
         padding: 10px 24px 16px 24px;
-        background: #633f29b3;
+        background: #bdbbb0;
         border-top: 1px solid rgba(255, 255, 255, 0.12);
       }
 
@@ -232,7 +236,7 @@
       .guide-content {
         font-size: medium;
         line-height: 1.7;
-        color: #ffffff;
+        color: #353535;
 
         .guide-list {
           margin: 0;
@@ -253,5 +257,4 @@
   }
 }
 </style>
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>

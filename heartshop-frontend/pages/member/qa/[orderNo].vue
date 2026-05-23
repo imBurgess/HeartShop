@@ -199,7 +199,7 @@ const formatDate = (iso: string) => {
 };
 
 const backToOrder = () => {
-  router.push(`/member/orders/${orderNo.value}`);
+  router.push("/member/orders");
 };
 
 onMounted(() => {
@@ -282,7 +282,7 @@ onMounted(() => {
 
 .qa-empty {
   font-size: 13px;
-  color: #777;
+  color: #353535;
 }
 
 .qa-list {
@@ -301,17 +301,17 @@ onMounted(() => {
 
 .qa-meta {
   font-size: 12px;
-  color: #888;
+  color: #353535;
 }
 
 .qa-answer {
   margin-top: 4px;
-  color: #333;
+  color: #353535;
 }
 
 .qa-pending {
   margin-top: 4px;
-  color: #c47c00;
+  color: #353535;
 }
 
 /* 底部按鈕 */

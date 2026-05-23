@@ -20,10 +20,7 @@ body,
 }
 
 body {
-  background-color: hsl(36, 34%, 73%);
-  background-image: url("/assets/img/PaperTexture.png");
-  background-size: cover;
-  background-repeat: repeat;
+  background-color: #ffffffc8;
   -webkit-transition: background-color 2s ease-in;
   transition: background-color 2s ease-in;
 }

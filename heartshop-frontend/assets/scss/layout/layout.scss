@@ -6,9 +6,53 @@
   font-display: swap;
 }
 
+/* ── 全域游標重設：非互動元素不顯示文字游標 ── */
+*,
+*::before,
+*::after {
+  cursor: default;
+}
+
+a,
+button,
+label[for],
+[role="button"],
+[role="tab"],
+[role="option"],
+[role="menuitem"],
+[role="columnheader"],
+[tabindex]:not([tabindex="-1"]) {
+  cursor: pointer;
+}
+
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  cursor: text;
+}
+
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="file"] {
+  cursor: pointer;
+}
+
+input:disabled,
+textarea:disabled,
+button:disabled,
+select:disabled {
+  cursor: not-allowed;
+}
+
 :root {
-  --brand-font: "Potta One", "Noto Sans TC", system-ui, -apple-system,
-    "Segoe UI", Arial, sans-serif;
+  --brand-font:
+    "Potta One", "Noto Sans TC", system-ui, -apple-system, "Segoe UI", Arial,
+    sans-serif;
 }
 
 //nav
@@ -46,24 +90,37 @@
 .n-dropdown-menu {
   border-radius: 16px;
   padding: 16px 24px;
-  background-color: #633f29b3;
+  background-color: #8A897Cb3;
   border: 1px solid rgb(255, 255, 255);
 
   .n-dropdown-option-body__label {
     color: #ffffff;
   }
   .n-dropdown-option:hover .n-dropdown-option-body__label {
-    color: #000000;
+    color: #353535;
   }
 }
 
 .nav-container {
-  background-color: #633f29b3;
+  background-color: #8A897Cb3;
   border: none;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+
+  &.is-scrolled {
+    background-color: rgba(138, 137, 124, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
   .container {
     width: min(1200px, 90%);
     margin: 0 auto;
     padding: 12px 16px;
+    transition: padding 0.3s ease;
   }
 }
 
@@ -116,7 +173,7 @@
   }
   button[type="submit"] {
     border: none;
-    background: #633f29;
+    background: #8A897C;
     padding: 6px 12px;
     border-radius: 999px;
     cursor: pointer;
@@ -130,7 +187,7 @@
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  background: #f2f4f7;
+  background: #D2D7DF;
 }
 .icon-btn.notification {
   background-color: #ffffff;
@@ -177,7 +234,7 @@
 div.site-footer_line {
   width: min(1200px, 90%);
   margin: 0 auto 24px;
-  border-top: 4px solid #000;
+  border-top: 4px solid #353535;
   height: 0;
   display: block;
 }
@@ -205,7 +262,7 @@ div.site-footer_line {
   margin: 0;
   padding-bottom: 5px;
   text-decoration: none;
-  color: #000000;
+  color: #353535;
   font-weight: bold;
 }
 
@@ -215,15 +272,18 @@ div.site-footer_line {
   margin: 0;
 }
 .footer-social_icon--fb {
-  background-image: url("@/assets/img/facebook.svg");
+  -webkit-mask-image: url("@/assets/img/facebook.svg");
+  mask-image: url("@/assets/img/facebook.svg");
 }
 
 .footer-social_icon--ig {
-  background-image: url("@/assets/img/instagram.svg");
+  -webkit-mask-image: url("@/assets/img/instagram.svg");
+  mask-image: url("@/assets/img/instagram.svg");
 }
 
 .footer-social_icon--threads {
-  background-image: url("@/assets/img/threads.svg");
+  -webkit-mask-image: url("@/assets/img/threads.svg");
+  mask-image: url("@/assets/img/threads.svg");
 }
 
 .footer-social {
@@ -237,15 +297,18 @@ div.site-footer_line {
   display: inline-block;
   width: 36px;
   height: 36px;
-  border-radius: 999px;
+  border-radius: 0;
 
-  background-color: #ffffff;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 60%;
+  background-color: #353535;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 
   cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .footer-social_icon:hover {

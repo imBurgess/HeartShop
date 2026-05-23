@@ -40,7 +40,7 @@
 
           <div class="login-actions">
             <n-button quaternary @click="onUpdateShow(false)"> 取消 </n-button>
-            <n-button type="primary" @click="handleLoginSubmit">
+            <n-button color="#353535" @click="handleLoginSubmit">
               登入
             </n-button>
           </div>
@@ -89,7 +89,7 @@
 
           <div class="login-actions">
             <n-button quaternary @click="onUpdateShow(false)">取消</n-button>
-            <n-button type="primary" @click="handleRegisterSubmit"
+            <n-button color="#353535" @click="handleRegisterSubmit"
               >註冊</n-button
             >
           </div>
@@ -105,9 +105,11 @@ import type { FormInst, FormRules } from "naive-ui";
 import { useMessage } from "naive-ui";
 
 // 父元件用 v-model:show 傳進來
-const props = defineProps<{
-  show: boolean;
-}>();
+const props = withDefaults(defineProps<{
+  show?: boolean;
+}>(), {
+  show: false
+});
 
 // 跟父元件溝通
 const emit = defineEmits<{
@@ -129,6 +131,7 @@ const memberInfo = useCookie<{
   memberId: number;
   email: string;
   name: string;
+  role?: string;
 } | null>("memberInfo", {
   sameSite: "lax",
 });
@@ -226,7 +229,7 @@ interface MemberDTO {
 // ✅ 真實登入 API：呼叫後端 /api/members/login
 async function loginApi(
   email: string,
-  password: string
+  password: string,
 ): Promise<LoginResponseData> {
   try {
     const response = await $fetch<ApiResponse<LoginResponseData>>(
@@ -234,7 +237,7 @@ async function loginApi(
       {
         method: "POST",
         body: { email, password },
-      }
+      },
     );
 
     // 檢查回傳的 token 和 member
@@ -268,7 +271,7 @@ async function registerApi(data: {
       {
         method: "POST",
         body: data,
-      }
+      },
     );
 
     // 可選：記錄註冊成功的會員資訊
@@ -308,6 +311,7 @@ const handleLoginSubmit = async () => {
         memberId: res.member.memberId,
         email: res.member.email,
         name: res.member.name,
+        role: res.member.role,
       };
 
       // 4) 告訴父元件登入成功
@@ -356,5 +360,18 @@ const handleRegisterSubmit = async () => {
   justify-content: flex-end; /* 讓裡面的按鈕靠右 */
   gap: 8px; /* 兩個按鈕之間留一點間距，可自行調整 */
   margin-top: 16px; /* 跟上面的表單內容拉開一點距離 */
+}
+
+/* 覆蓋 n-tabs 的預設綠色為 #BDBBB0 */
+:deep(.n-tabs-tab:hover),
+:deep(.n-tabs-tab:hover .n-tabs-tab__label) {
+  color: #8a897c !important;
+}
+:deep(.n-tabs-tab--active),
+:deep(.n-tabs-tab--active .n-tabs-tab__label) {
+  color: #8a897c !important;
+}
+:deep(.n-tabs-bar) {
+  background-color: #8a897c !important;
 }
 </style>

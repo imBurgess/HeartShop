@@ -110,6 +110,19 @@
               />
             </n-form-item-gi>
 
+            <!-- 庫存數量 -->
+            <n-form-item-gi :span="6" :label="isEdit ? '庫存數量' : '初始數量'" path="stock">
+              <n-input-number
+                v-model:value="formData.stock"
+                placeholder="0"
+                :min="0"
+                :precision="0"
+                style="width: 100%"
+              >
+                <template #suffix>件</template>
+              </n-input-number>
+            </n-form-item-gi>
+
             <!-- 排序 -->
             <n-form-item-gi :span="12" label="排序順序" path="sortOrder">
               <n-input-number
@@ -223,6 +236,7 @@ const formData = reactive({
   isNew: false,
   isSoldOut: false,
   images: [] as string[],
+  stock: 0,
 });
 
 // 分類選項
@@ -350,6 +364,7 @@ const loadProduct = async () => {
     formData.isNew = product.isNew;
     formData.isSoldOut = product.isSoldOut;
     formData.images = product.images || [];
+    formData.stock = product.stockQuantity ?? 0;
 
     // 還原圖片列表
     if (product.images && product.images.length > 0) {
@@ -395,16 +410,17 @@ const handleSubmit = async () => {
           .filter((t) => t)
       : [];
 
-    const submitData = {
+    const baseData = {
       ...formData,
       categoryId: formData.categoryId!,
-      tags: tagsArray as any, // 配合後端可能有變動，暫時轉 any，理想是 string[]
+      tags: tagsArray as any,
     };
 
     if (isEdit.value && productId.value) {
-      await productStore.updateProduct(productId.value, submitData);
+      await productStore.updateProduct(productId.value, baseData);
       message.success("更新成功");
     } else {
+      const submitData = { ...baseData, initialStock: formData.stock };
       await productStore.createProduct(submitData);
       message.success("新增成功");
     }

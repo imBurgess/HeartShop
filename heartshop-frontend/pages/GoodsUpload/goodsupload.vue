@@ -51,7 +51,9 @@
           </n-form-item>
 
           <!-- 按鈕 -->
-          <n-button type="primary" block @click="handleSubmit"> 送出 </n-button>
+          <n-button block @click="handleSubmit" color="#353535">
+            送出
+          </n-button>
         </n-form>
       </n-card>
     </main>
@@ -95,20 +97,6 @@ const rules = {
 const handleSubmit = () => {
   formRef.value?.validate((errors) => {
     if (!errors) {
-      console.log("表單送出：", {
-        ...form,
-        // 圖片實際要送出的內容通常會取 rawFile 自己組 FormData
-        imageList: form.imageList,
-      });
-
-      // TODO: 之後可改成 API 上傳
-      // const formData = new FormData()
-      // formData.append('username', form.username)
-      // ...
-      // form.imageList.forEach((file) => {
-      //   if (file?.file) formData.append('images', file.file)
-      // })
-
       window.alert("資料已送出！");
     }
   });
@@ -121,26 +109,26 @@ const handleSubmit = () => {
   width: min(400px, 90%);
 }
 ::v-deep(.n-card) {
-  background-color: #633f29a2;
+  background-color: #8a897c;
   border-radius: 16px;
   padding: 20px;
   border: none;
 }
 
 ::v-deep(.n-form-item-label) {
-  color: #ffffff;
+  color: #353535;
   font-weight: bold;
   font-size: larger;
   --n--color: #ffffff;
 }
 ::v-deep(.n-card-header__main) {
-  color: #ffffff !important;
+  color: #353535 !important;
   font-weight: bold;
   font-size: larger;
 }
 ::v-deep(.n-upload .n-upload-trigger) {
   font-weight: bold;
   font-family: "Noto Sans TC", sans-serif;
-  color: #000000;
+  color: #353535;
 }
 </style>

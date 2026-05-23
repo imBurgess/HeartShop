@@ -55,9 +55,9 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/inventory/index.vue"),
       },
       {
-        path: "promotions",
-        name: "PromotionList",
-        component: () => import("@/views/promotions/index.vue"),
+        path: "qa",
+        name: "QaManagement",
+        component: () => import("@/views/qa/index.vue"),
       },
       {
         path: "home-blocks",

@@ -432,7 +432,7 @@ const onSubmitPassword = async () => {
 
       &:disabled {
         background-color: #f5f5f5;
-        color: #666;
+        color: #353535;
       }
     }
   }

@@ -25,21 +25,39 @@
 
 .about-card {
   margin: 50px auto;
-  width: 350px;
-  background: #633f29b3;
-  padding: 30px 25px;
+  width: 600px;
+  height: 400px;
+  background: #bdbbb0;
+  padding: 30px 40px;
   border-radius: 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.about-title,
-.about-text,
-.about-list {
-  color: #ffffff;
+.about-title {
+  color: #353535;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.about-text {
+  color: #353535;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  font-weight: bold;
+  margin-bottom: 16px;
 }
 
 .about-list {
-  margin-top: 12px;
-  padding-left: 20px;
-  list-style: disc;
+  color: #353535;
+  font-size: 1rem;
+  line-height: 2;
+  font-weight: bold;
+  list-style: none;
+  padding-left: 0;
+  margin-top: 0;
 }
 </style>

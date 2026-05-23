@@ -31,11 +31,10 @@
           <span class="count">共 {{ filteredProducts.length }} 件商品</span>
         </div>
 
-        <!-- 右邊排序，下拉先用原生 select 就好，之後要用 Naive UI 也可以 -->
         <div class="sortArea">
           <label>
             排序：
-            <select>
+            <select v-model="sortBy">
               <option value="newest">最新上架</option>
               <option value="price-low">價格由低到高</option>
               <option value="price-high">價格由高到低</option>
@@ -89,9 +88,11 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useMessage } from "naive-ui"; // 如有安裝 Naive UI
+import { useCartStore } from "@/stores/cart";
 
 const route = useRoute();
 const router = useRouter();
+const message = useMessage();
 
 // 目前網址上的 slug
 const slug = computed(() => route.params.slug);
@@ -115,9 +116,9 @@ const currentBanner = computed(() => {
   // 從 categories 中找對應的分類，使用其 bannerUrl
   const category = categories.value.find((c) => c.slug === slug.value);
   if (category?.bannerUrl) {
-    // 使用 VITE_API_HOST（只包含 host，不含 /api 路徑）
+    // 使用 VITE_API_BASE_URL（不含 /api 路徑）
     // 因為 bannerUrl 已經包含 /api/uploads/ 前綴
-    const apiHost = import.meta.env.VITE_API_HOST || "http://localhost:8080";
+    const apiHost = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
     return {
       src: category.bannerUrl.startsWith("http")
         ? category.bannerUrl
@@ -170,7 +171,7 @@ const fetchCategories = async () => {
       menuOptions.value = [
         { label: "人氣商品推薦", key: "popular", route: "/shop/popular" },
         ...categories.value.map((cat) => ({
-          label: `| ${cat.nameZh}`,
+          label: `★ ${cat.nameZh}`,
           key: cat.slug,
           route: `/shop/${cat.slug}`,
         })),
@@ -234,8 +235,8 @@ const fetchProducts = async () => {
         tags: Array.isArray(p.tags)
           ? p.tags
           : p.tags
-          ? p.tags.split(",").filter((t) => t)
-          : [],
+            ? p.tags.split(",").filter((t) => t)
+            : [],
         // 使用後端回傳的 imageUrl 或 images[0]，否則給預設圖
         image:
           p.imageUrl || (p.images && p.images[0]) || "/products/coat01.jpg",
@@ -254,7 +255,7 @@ watch(
   () => route.params.slug,
   () => {
     fetchProducts();
-  }
+  },
 );
 
 onMounted(async () => {
@@ -269,9 +270,27 @@ const updateQty = (item, delta) => {
   item.quantity = next;
 };
 
-const addToCart = (item) => {
-  console.log("加入購物車", item.name, "數量", item.quantity);
-  // window.alert(`已加入購物車：${item.name} x ${item.quantity}`);
+const addToCart = async (item) => {
+  const token = useCookie("token").value;
+  if (!token) {
+    message.warning("請先登入");
+    router.push("/member");
+    return;
+  }
+
+  // 從 sizeInfo 取得第一個尺寸，若無則預設為 "F"
+  const defaultSize = item.sizeInfo 
+    ? item.sizeInfo.split(/[,/]/)[0].trim() 
+    : "F";
+
+  const cartStore = useCartStore();
+  const success = await cartStore.addToCart(item.id, defaultSize, item.quantity);
+
+  if (success) {
+    message.success(`已將 ${item.name} 加入購物車！`);
+  } else {
+    message.error("加入購物車失敗");
+  }
 };
 
 const goProductDetail = (item) => {
@@ -281,6 +300,7 @@ const goProductDetail = (item) => {
 // ---------------- Tag 列 與 前端篩選 ----------------
 const ALL_TAG = "全部";
 const selectedTag = ref(ALL_TAG);
+const sortBy = ref("newest");
 
 // 這個分類底下有哪些 tag（從 fetch 回來的商品資料自動算出）
 const availableTags = computed(() => {
@@ -291,10 +311,22 @@ const availableTags = computed(() => {
   return [ALL_TAG, ...Array.from(set)];
 });
 
-// 最終要呈現的商品（依 tag 篩選 local filter）
+// 最終要呈現的商品（依 tag 篩選 + 排序）
 const filteredProducts = computed(() => {
-  if (selectedTag.value === ALL_TAG) return products.value;
-  return products.value.filter((p) => p.tags?.includes(selectedTag.value));
+  let list = selectedTag.value === ALL_TAG
+    ? [...products.value]
+    : products.value.filter((p) => p.tags?.includes(selectedTag.value));
+
+  if (sortBy.value === "price-low") {
+    list.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
+  } else if (sortBy.value === "price-high") {
+    list.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
+  } else {
+    // newest: 依 createdAt 降冪
+    list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  return list;
 });
 </script>
 
@@ -378,7 +410,7 @@ const filteredProducts = computed(() => {
 
     .count {
       font-size: 13px;
-      color: #777;
+      color: #353535;
     }
   }
 
@@ -411,7 +443,9 @@ const filteredProducts = computed(() => {
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 
   &:hover {
     transform: translateY(-2px);

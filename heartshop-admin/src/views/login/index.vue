@@ -74,7 +74,7 @@
               <input
                 v-model.trim="form.account"
                 type="text"
-                placeholder="請輸入帳號"
+                placeholder="帳號或 Email"
                 autocomplete="username"
                 class="form-input"
               />
@@ -135,21 +135,6 @@
               </span>
             </button>
 
-            <div class="login-hint">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                />
-              </svg>
-              <span
-                >測試帳號：<strong>admin</strong> / 密碼：<strong
-                  >1234</strong
-                ></span
-              >
-            </div>
           </form>
         </div>
       </div>
@@ -184,20 +169,35 @@ async function handleLogin() {
 
   loading.value = true;
   try {
-    await new Promise((r) => setTimeout(r, 600));
+    const res = await fetch("/api/members/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: form.account, password: form.password }),
+    });
 
-    if (!(form.account === "admin" && form.password === "1234")) {
-      errorMsg.value = "帳號或密碼錯誤";
+    const json = await res.json();
+
+    if (!res.ok || json.code !== "0000") {
+      errorMsg.value = json.message || "帳號或密碼錯誤";
+      return;
+    }
+
+    const { token, member } = json.data;
+
+    if (member.role !== "ADMIN") {
+      errorMsg.value = "此帳號無管理員權限";
       return;
     }
 
     auth.login({
-      token: "mock-token-123",
-      user: { name: "Admin", role: "super" },
+      token,
+      user: { name: member.name, role: member.role },
     });
 
     const redirect = (route.query.redirect as string) || "/";
     router.replace(redirect);
+  } catch {
+    errorMsg.value = "網路錯誤，請稍後再試";
   } finally {
     loading.value = false;
   }
@@ -210,7 +210,8 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* 大地暖色調漸層背景，與前台一致 */
+  background: linear-gradient(135deg, #8A897C 0%, #5a5950 60%, #3d3c36 100%);
   padding: var(--spacing-md);
   position: relative;
   overflow: hidden;
@@ -224,7 +225,7 @@ async function handleLogin() {
     height: 100%;
     background: radial-gradient(
       circle,
-      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.08) 0%,
       transparent 70%
     );
     animation: float 20s ease-in-out infinite;

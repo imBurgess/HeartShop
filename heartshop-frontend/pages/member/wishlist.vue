@@ -30,8 +30,11 @@
                 <span class="col-action">刪除</span>
               </div>
 
+              <!-- 載入中 -->
+              <div v-if="loading" class="empty-state">載入中...</div>
+
               <!-- 沒有商品 -->
-              <div v-if="wishlistItems.length === 0" class="empty-state">
+              <div v-else-if="wishlistItems.length === 0" class="empty-state">
                 目前沒有任何收藏商品
               </div>
 
@@ -39,35 +42,37 @@
               <div
                 v-else
                 v-for="item in wishlistItems"
-                :key="item.id"
+                :key="item.wishlistId"
                 class="wishlist-row"
               >
                 <!-- 商品名稱＋圖片 -->
                 <div class="col-product">
-                  <NuxtLink :to="`/product/${item.id}`" class="product-block">
+                  <NuxtLink :to="`/product/${item.productId}`" class="product-block">
                     <n-image
-                      :src="item.image"
-                      :alt="item.nameZh"
+                      :src="getFullImageUrl(item.productImage)"
+                      :alt="item.productName"
                       width="140"
                       height="180"
                       object-fit="cover"
                       preview-disabled
                     />
                     <div class="product-info">
-                      <p class="name-zh">{{ item.nameZh }}</p>
-                      <p class="name-en">{{ item.nameEn }}</p>
+                      <p class="name-zh">{{ item.productName }}</p>
+                      <p class="name-en">{{ item.productNameEn }}</p>
                     </div>
                   </NuxtLink>
                 </div>
 
                 <!-- 單價 -->
                 <div class="col-price">
-                  <span class="price">NT {{ item.price }}</span>
+                  <span class="price">NT $ {{ (item.price || 0).toLocaleString() }}</span>
                 </div>
 
                 <!-- 折扣價 -->
                 <div class="col-discount">
-                  <span class="discount">NT {{ item.discountPrice }}</span>
+                  <span class="discount">
+                    {{ item.discountPrice ? 'NT $ ' + item.discountPrice.toLocaleString() : '-' }}
+                  </span>
                 </div>
 
                 <!-- 刪除 -->
@@ -75,9 +80,9 @@
                   <button
                     class="btn-delete"
                     type="button"
-                    @click="removeItem(item.id)"
+                    @click="removeItem(item.productId)"
                   >
-                    X
+                    🗑 取消收藏
                   </button>
                 </div>
               </div>
@@ -88,7 +93,11 @@
               <span class="count">
                 【 共 {{ wishlistItems.length }} 件 】
               </span>
-              <n-button type="primary" class="continue-btn" @click="goShopping">
+              <n-button
+                color="#353535"
+                class="continue-btn"
+                @click="goShopping"
+              >
                 繼續購物 &gt;
               </n-button>
             </footer>
@@ -100,13 +109,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import type { MenuOption } from "naive-ui";
 import { useRouter } from "vue-router";
+import { useMessage } from "naive-ui";
+import { wishlistService, type WishlistItem } from "@/services/wishlist";
 
 const router = useRouter();
+const message = useMessage();
 
-// 左側選單目前所在頁：我的收藏
 const activeKey = ref<string | null>("favorite");
 
 const menuOptions: MenuOption[] = [
@@ -117,66 +128,49 @@ const menuOptions: MenuOption[] = [
   { key: "profile", label: "修改會員資料與密碼" },
 ];
 
-// 切換左側選單時順便導頁（路徑你可以照實際專案調整）
 const handleMenuSelect = (key: string) => {
   activeKey.value = key;
-  switch (key) {
-    case "dashboard":
-      router.push("/member");
-      break;
-    case "favorite":
-      router.push("/member/wishlist");
-      break;
-    case "orders":
-      router.push("/member/orders");
-      break;
-    case "qa":
-      router.push("/member/qa");
-      break;
-    case "profile":
-      router.push("/member/profile");
-      break;
+  const pathMap: Record<string, string> = {
+    dashboard: "/member",
+    favorite: "/member/wishlist",
+    orders: "/member/orders",
+    qa: "/member/qa",
+    profile: "/member/profile",
+  };
+  router.push(pathMap[key] ?? "/member");
+};
+
+const loading = ref(true);
+const wishlistItems = ref<WishlistItem[]>([]);
+
+const getFullImageUrl = (url?: string) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  const base = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+  return `${base}${url}`;
+};
+
+onMounted(async () => {
+  try {
+    wishlistItems.value = await wishlistService.getWishlist();
+  } catch (err: any) {
+    message.error(err.message || "載入收藏失敗");
+  } finally {
+    loading.value = false;
+  }
+});
+
+const removeItem = async (productId: number) => {
+  try {
+    await wishlistService.remove(productId);
+    wishlistItems.value = wishlistItems.value.filter((i) => i.productId !== productId);
+    message.success("已取消收藏");
+  } catch (err: any) {
+    message.error(err.message || "操作失敗");
   }
 };
 
-// 假資料：之後改成 API 或 Pinia
-const wishlistItems = ref([
-  {
-    id: 1,
-    nameZh: "『日本居住企畫款』老呢刷喇叭褲",
-    nameEn: "WatabeSop Tweed Wide Flare Pants",
-    price: 0,
-    discountPrice: 0,
-    image: "/images/sample/wish-1.jpg",
-  },
-  {
-    id: 2,
-    nameZh: "尼龍斜背包",
-    nameEn: "Nylon Body Bag",
-    price: 0,
-    discountPrice: 0,
-    image: "/images/sample/wish-2.jpg",
-  },
-  {
-    id: 3,
-    nameZh: "2WAY尼龍雙肩包",
-    nameEn: "2-Way Nylon Backpack",
-    price: 0,
-    discountPrice: 0,
-    image: "/images/sample/wish-3.jpg",
-  },
-]);
-
-// 移除收藏
-const removeItem = (id: number) => {
-  wishlistItems.value = wishlistItems.value.filter((item) => item.id !== id);
-};
-
-// 繼續購物
-const goShopping = () => {
-  // 依照你的商品列表實際路徑調整
-  router.push("/shop/all");
-};
+const goShopping = () => router.push("/shop/popular");
 </script>
 
 <style scoped lang="scss">
@@ -219,7 +213,7 @@ const goShopping = () => {
 /* 表頭列 */
 .wishlist-header-row {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) 1fr 1fr 80px;
+  grid-template-columns: minmax(0, 3fr) 1fr 1fr 110px;
   padding: 8px 16px;
   background-color: #f3f3f3;
   font-size: 13px;
@@ -228,7 +222,7 @@ const goShopping = () => {
 /* 資料列 */
 .wishlist-row {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) 1fr 1fr 80px;
+  grid-template-columns: minmax(0, 3fr) 1fr 1fr 110px;
   padding: 16px;
   column-gap: 24px;
   align-items: center;
@@ -255,7 +249,7 @@ const goShopping = () => {
 
   .name-en {
     font-size: 12px;
-    color: #d33;
+    color: #353535;
     line-height: 1.4;
   }
 }
@@ -273,12 +267,23 @@ const goShopping = () => {
 
 /* 刪除按鈕 */
 .btn-delete {
-  width: 28px;
-  height: 24px;
-  border: 1px solid #999;
-  background: #f5f5f5;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
   font-size: 12px;
+  color: #c0392b;
+  background: transparent;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.18s, color 0.18s;
+
+  &:hover {
+    background: #c0392b;
+    color: #fff;
+  }
 }
 
 /* 空狀態 */

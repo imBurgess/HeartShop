@@ -107,9 +107,12 @@ function handleLogout() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--color-white);
-  border-bottom: 1px solid var(--color-gray-200);
-  box-shadow: var(--shadow-sm);
+  /* 前台一致的大地色毛玻璃效果 */
+  background-color: rgba(138, 137, 124, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 12px rgba(90, 89, 80, 0.18);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -128,33 +131,29 @@ function handleLogout() {
   gap: var(--spacing-sm);
   font-weight: var(--font-weight-bold);
   font-size: 1.25rem;
-  color: var(--color-gray-900);
+  color: #ffffff;
 }
 
 .logo-icon {
   width: 28px;
   height: 28px;
-  color: var(--color-primary);
-  filter: drop-shadow(0 2px 4px rgba(233, 30, 99, 0.2));
+  color: #ffffff;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .logo-text {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-dark) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff;
+  font-weight: var(--font-weight-bold);
+  /* 覆蓋漸層透明文字，改為純白 */
+  -webkit-text-fill-color: #ffffff;
 }
 
 .logo-badge {
   padding: 2px 8px;
   font-size: 0.75rem;
   font-weight: var(--font-weight-medium);
-  color: var(--color-primary);
-  background: var(--color-primary-bg);
+  color: rgba(138, 137, 124, 0.9);
+  background: rgba(255, 255, 255, 0.9);
   border-radius: var(--radius-full);
 }
 
@@ -175,7 +174,7 @@ function handleLogout() {
   left: 12px;
   width: 18px;
   height: 18px;
-  color: var(--color-gray-500);
+  color: rgba(255, 255, 255, 0.7);
   pointer-events: none;
 }
 
@@ -184,22 +183,22 @@ function handleLogout() {
   height: 36px;
   padding: 0 12px 0 38px;
   font-size: 0.875rem;
-  color: var(--color-gray-900);
-  background: var(--color-gray-100);
-  border: 1px solid transparent;
+  color: #353535;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: var(--radius-full);
   outline: none;
   transition: all var(--transition-base);
 
   &::placeholder {
-    color: var(--color-gray-500);
+    color: rgba(90, 89, 80, 0.6);
   }
 
   &:focus {
     width: 280px;
-    background: var(--color-white);
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-bg);
+    background: #ffffff;
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
   }
 }
 
@@ -210,7 +209,7 @@ function handleLogout() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-gray-600);
+  color: rgba(255, 255, 255, 0.85);
   background: transparent;
   border: none;
   border-radius: var(--radius);
@@ -223,8 +222,8 @@ function handleLogout() {
   }
 
   &:hover {
-    color: var(--color-primary);
-    background: var(--color-gray-100);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -234,8 +233,8 @@ function handleLogout() {
   right: 8px;
   width: 8px;
   height: 8px;
-  background: var(--color-error);
-  border: 2px solid var(--color-white);
+  background: #e8c47a;
+  border: 2px solid rgba(138, 137, 124, 0.9);
   border-radius: var(--radius-full);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -260,7 +259,7 @@ function handleLogout() {
   transition: all var(--transition-base);
 
   &:hover {
-    background: var(--color-gray-100);
+    background: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -270,12 +269,8 @@ function handleLogout() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-white);
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-dark) 100%
-  );
+  color: var(--color-primary);
+  background: #ffffff;
   border-radius: var(--radius-full);
   box-shadow: var(--shadow);
 
@@ -294,12 +289,12 @@ function handleLogout() {
 .user-name {
   font-size: 0.875rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--color-gray-900);
+  color: #ffffff;
 }
 
 .user-role {
   font-size: 0.75rem;
-  color: var(--color-gray-600);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .logout-button {
@@ -308,9 +303,9 @@ function handleLogout() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-gray-600);
+  color: rgba(255, 255, 255, 0.85);
   background: transparent;
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -321,9 +316,9 @@ function handleLogout() {
   }
 
   &:hover {
-    color: var(--color-error);
-    background: rgba(244, 67, 54, 0.08);
-    border-color: var(--color-error);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.6);
     transform: translateY(-1px);
   }
 }

@@ -22,13 +22,9 @@
               申請退貨請於
               <span class="highlight">七日鑑賞期內</span>
               ，來信客服申請。退貨相關資訊請參考：
-              <a
-                href="https://senseofplace.tokyo/zh-TW/AfterSales"
-                target="_blank"
-                rel="noopener"
-              >
+              <NuxtLink to="/ShopInfo/shopinfo?sec=return">
                 售後服務說明
-              </a>
+              </NuxtLink>
             </p>
           </n-card>
 
@@ -55,11 +51,15 @@
             </template>
 
             <n-data-table
+              v-if="latestOrders.length > 0"
               :columns="columns"
               :data="latestOrders"
               :bordered="false"
               size="small"
             />
+            <p v-else style="margin:0;font-size:13px;color:#aaa;text-align:center;padding:24px 0">
+              目前尚無訂單紀錄
+            </p>
           </n-card>
         </n-layout-content>
       </n-layout>
@@ -71,6 +71,7 @@
 import { h, ref, computed, onMounted, resolveComponent, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { DataTableColumns, MenuOption } from "naive-ui";
+import { orderService } from "@/services/order";
 
 const router = useRouter();
 const route = useRoute();
@@ -117,7 +118,7 @@ const handleMenuSelect = (key: string) => {
       router.push("/member/wishlist");
       break;
     case "orders":
-      router.push("/member/orders/orders");
+      router.push("/member/orders");
       break;
     case "qa":
       router.push("/member/qa");
@@ -144,9 +145,21 @@ const memberName = computed(() => memberInfoCookie.value?.name || "訪客");
 const bonusPoints = ref(0); // TODO: 之後改成呼叫後端 API 取得實際紅利
 
 // ✅ 在客戶端檢查登入狀態（避免 SSR 問題）
-onMounted(() => {
+onMounted(async () => {
   if (!memberInfoCookie.value) {
     navigateTo("/");
+    return;
+  }
+  try {
+    const all = await orderService.getMemberOrders();
+    latestOrders.value = all.slice(0, 3).map((o) => ({
+      orderNo: o.orderNo,
+      date: new Date(o.createdAt).toLocaleDateString("zh-TW"),
+      total: o.totalAmount,
+      status: statusLabel(o.status),
+    }));
+  } catch (_) {
+    // 載入失敗靜默處理，不影響其他卡片
   }
 });
 
@@ -164,15 +177,10 @@ const columns: DataTableColumns<OrderRow> = [
   { title: "狀態", key: "status" },
 ];
 
-const latestOrders = ref<OrderRow[]>([
-  {
-    orderNo: "20241201001",
-    date: "2024/12/01",
-    total: 1280,
-    status: "已出貨",
-  },
-  // 之後改成呼叫 API 拿資料
-]);
+const latestOrders = ref<OrderRow[]>([]);
+
+const statusLabel = (s: string) =>
+  ({ pending: "待付款", PAID: "已付款", FAILED: "付款失敗", SHIPPED: "已出貨", COMPLETED: "已完成" }[s] ?? s);
 </script>
 
 <style scoped lang="scss">
@@ -209,12 +217,12 @@ const latestOrders = ref<OrderRow[]>([
 .notice {
   margin: 0;
   line-height: 1.6;
-  color: #666;
+  color: #353535;
   font-size: 14px;
 }
 
 .notice .highlight {
-  color: #c00;
+  color: #353535;
   font-weight: 600;
 }
 
@@ -253,16 +261,7 @@ const latestOrders = ref<OrderRow[]>([
 .order-more {
   font-size: 12px;
   text-decoration: underline;
-  color: #555;
-}
-
-.order-no {
-  color: #c00;
-}
-
-.order-detail {
-  font-size: 12px;
-  text-decoration: underline;
+  color: #353535;
 }
 
 /* RWD */
