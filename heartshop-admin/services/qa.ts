@@ -70,4 +70,12 @@ export const qaApi = {
       body: JSON.stringify({ answer }),
     });
   },
+
+  deleteProductQa(qaId: number): Promise<void> {
+    return request<void>(`${API_BASE}/admin/qa/products/${qaId}`, { method: "DELETE" });
+  },
+
+  deleteOrderQa(qaId: number): Promise<void> {
+    return request<void>(`${API_BASE}/admin/qa/orders/${qaId}`, { method: "DELETE" });
+  },
 };

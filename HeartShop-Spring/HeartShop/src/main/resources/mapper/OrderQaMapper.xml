@@ -74,11 +74,26 @@
         </where>
     </select>
 
+    <select id="findById" resultMap="QaResultMap">
+        SELECT q.qa_id, q.order_no, q.member_id,
+               m.name AS member_name,
+               q.question, q.answer, q.is_public,
+               q.created_at, q.answered_at
+        FROM order_qa q
+        LEFT JOIN member m ON q.member_id = m.member_id
+        WHERE q.qa_id = #{qaId}
+    </select>
+
     <!-- Admin: 回覆問題 -->
     <update id="updateAnswer">
         UPDATE order_qa
         SET answer = #{answer}, answered_at = CURRENT_TIMESTAMP
         WHERE qa_id = #{qaId}
     </update>
+
+    <!-- Admin: 刪除問題 -->
+    <delete id="deleteById">
+        DELETE FROM order_qa WHERE qa_id = #{qaId}
+    </delete>
 
 </mapper>

@@ -174,7 +174,7 @@ const addToCart = async (item: SearchItem) => {
   }
   const defaultSize = (item as any).sizeInfo
     ? (item as any).sizeInfo.split(/[,/]/)[0].trim()
-    : "F";
+    : "Free Size";
   const success = await cartStore.addToCart(item.id, defaultSize, item.quantity);
   if (success) {
     message.success(`已將 ${item.name} 加入購物車！`);

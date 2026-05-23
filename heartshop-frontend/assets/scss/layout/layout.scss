@@ -87,6 +87,90 @@ select:disabled {
   }
 }
 
+// 商品分類自訂 hover dropdown
+.navCategoryMenu {
+  position: relative;
+
+  &:hover .navCategoryDropdown {
+    display: block;
+  }
+
+  .navCategoryDropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1001;
+    border-radius: 16px;
+    padding: 16px 24px;
+    background-color: #8a897cb3;
+    border: 1px solid rgb(255, 255, 255);
+    width: max-content;
+    backdrop-filter: blur(8px);
+  }
+
+  .navCatList,
+  .navCatSubList {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 0;
+  }
+
+  .navCatParentRow {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  .navCatItem {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 8px 4px;
+    cursor: pointer;
+    color: #ffffff;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #353535;
+    }
+  }
+
+  .navCatSubItem {
+    font-size: 13px;
+    padding-left: 14px;
+  }
+
+  .navCatToggle {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 0 8px 8px;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.7);
+    transition: color 0.2s;
+
+    &:hover {
+      color: #353535;
+    }
+  }
+
+  .navCatDivider {
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    margin: 8px 0;
+  }
+}
+
 .n-dropdown-menu {
   border-radius: 16px;
   padding: 16px 24px;
@@ -313,4 +397,139 @@ div.site-footer_line {
 
 .footer-social_icon:hover {
   transform: translateY(-2px);
+}
+
+// 通知下拉面板
+.notif-dropdown {
+  width: 320px;
+  border-radius: 16px;
+  background-color: #8a897cb3;
+  border: 1px solid rgb(255, 255, 255);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.notif-header-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.notif-read-all {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #ffffff;
+  }
+}
+
+.notif-empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.notif-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notif-item {
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  &.notif-unread::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ffffff;
+  }
+}
+
+.notif-item-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.notif-item-content {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notif-item-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 3px;
+}
+
+.notif-footer {
+  padding: 8px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-all-link {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #ffffff;
+  }
+}
+
+.notif-no-msg-tip {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 8px;
+  animation: fadeInOut 2s ease forwards;
+}
+
+@keyframes fadeInOut {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
 }

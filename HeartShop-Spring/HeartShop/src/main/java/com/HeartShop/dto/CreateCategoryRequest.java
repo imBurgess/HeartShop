@@ -28,4 +28,7 @@ public class CreateCategoryRequest {
     private Long parentId;
     private Integer sortOrder;
     private Boolean isActive;
+
+    @Size(max = 500, message = "Banner URL 長度不可超過 500 字元")
+    private String bannerUrl;
 }

@@ -125,7 +125,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, h } from "vue";
-import { NButton, NTag, useMessage, type DataTableColumns } from "naive-ui";
+import { NButton, NTag, NPopconfirm, NSpace, useMessage, type DataTableColumns } from "naive-ui";
 import { qaApi, type AdminQaItem } from "../../../services/qa";
 
 const message = useMessage();
@@ -178,6 +178,24 @@ const submitReply = async () => {
     message.error(err.message || "回覆失敗");
   } finally {
     replying.value = false;
+  }
+};
+
+// ── 刪除 ────────────────────────────────────────────
+const deleteQa = async (row: AdminQaItem) => {
+  try {
+    if (activeTab.value === "product") {
+      await qaApi.deleteProductQa(row.qaId);
+      productItems.value = productItems.value.filter((i) => i.qaId !== row.qaId);
+      total.value = Math.max(0, total.value - 1);
+    } else {
+      await qaApi.deleteOrderQa(row.qaId);
+      orderItems.value = orderItems.value.filter((i) => i.qaId !== row.qaId);
+      total.value = Math.max(0, total.value - 1);
+    }
+    message.success("刪除成功");
+  } catch (err: any) {
+    message.error(err.message || "刪除失敗");
   }
 };
 
@@ -260,10 +278,18 @@ const productColumns: DataTableColumns<AdminQaItem> = [
   {
     title: "操作",
     key: "action",
-    width: 80,
+    width: 140,
     render: (row) =>
-      h(NButton, { size: "small", type: "primary", ghost: true, onClick: () => openReply(row) },
-        { default: () => (row.answer ? "修改回覆" : "回覆") }),
+      h(NSpace, { size: 6 }, {
+        default: () => [
+          h(NButton, { size: "small", type: "primary", ghost: true, onClick: () => openReply(row) },
+            { default: () => (row.answer ? "修改回覆" : "回覆") }),
+          h(NPopconfirm, { onPositiveClick: () => deleteQa(row) }, {
+            trigger: () => h(NButton, { size: "small", type: "error", ghost: true }, { default: () => "刪除" }),
+            default: () => "確定要刪除此問答？",
+          }),
+        ],
+      }),
   },
 ];
 
@@ -311,10 +337,18 @@ const orderColumns: DataTableColumns<AdminQaItem> = [
   {
     title: "操作",
     key: "action",
-    width: 80,
+    width: 140,
     render: (row) =>
-      h(NButton, { size: "small", type: "primary", ghost: true, onClick: () => openReply(row) },
-        { default: () => (row.answer ? "修改回覆" : "回覆") }),
+      h(NSpace, { size: 6 }, {
+        default: () => [
+          h(NButton, { size: "small", type: "primary", ghost: true, onClick: () => openReply(row) },
+            { default: () => (row.answer ? "修改回覆" : "回覆") }),
+          h(NPopconfirm, { onPositiveClick: () => deleteQa(row) }, {
+            trigger: () => h(NButton, { size: "small", type: "error", ghost: true }, { default: () => "刪除" }),
+            default: () => "確定要刪除此問答？",
+          }),
+        ],
+      }),
   },
 ];
 

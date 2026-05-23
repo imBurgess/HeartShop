@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.HeartShop.mapper.NotificationMapper">
+
+    <resultMap id="NotificationResultMap" type="com.HeartShop.entity.Notification">
+        <id     property="notificationId" column="notification_id"/>
+        <result property="memberId"       column="member_id"/>
+        <result property="type"           column="type"/>
+        <result property="title"          column="title"/>
+        <result property="content"        column="content"/>
+        <result property="linkUrl"        column="link_url"/>
+        <result property="isRead"         column="is_read"/>
+        <result property="createdAt"      column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="notificationId">
+        INSERT INTO notification (member_id, type, title, content, link_url, is_read, created_at)
+        VALUES (#{memberId}, #{type}, #{title}, #{content}, #{linkUrl}, false, CURRENT_TIMESTAMP)
+    </insert>
+
+    <select id="findByMemberId" resultMap="NotificationResultMap">
+        SELECT notification_id, member_id, type, title, content, link_url, is_read, created_at
+        FROM notification
+        WHERE member_id = #{memberId}
+        ORDER BY created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countUnread" resultType="long">
+        SELECT COUNT(*) FROM notification
+        WHERE member_id = #{memberId} AND is_read = false
+    </select>
+
+    <update id="markRead">
+        UPDATE notification
+        SET is_read = true
+        WHERE notification_id = #{notificationId} AND member_id = #{memberId}
+    </update>
+
+    <update id="markAllRead">
+        UPDATE notification
+        SET is_read = true
+        WHERE member_id = #{memberId} AND is_read = false
+    </update>
+
+</mapper>

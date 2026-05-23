@@ -162,7 +162,10 @@ const updateQty = (item: any, delta: number) => {
 };
 
 const addToCart = async (item: any) => {
-  const success = await cartStore.addToCart(item.productId, "F", item.quantity || 1);
+  const defaultSize = item.sizeInfo
+    ? item.sizeInfo.split(/[,/]/)[0].trim()
+    : "Free Size";
+  const success = await cartStore.addToCart(item.productId, defaultSize, item.quantity || 1);
   
   if (success) {
     message.success(`已將 ${item.name} 加入購物車！`);

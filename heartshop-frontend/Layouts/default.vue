@@ -23,10 +23,57 @@
               <button type="submit">search</button>
             </form>
 
-            <button
-              class="icon-btn notification"
-              aria-label="消息中心"
-            ></button>
+            <n-popover
+              trigger="hover"
+              placement="bottom-end"
+              :show-arrow="false"
+              :raw="true"
+              @update:show="onNotifPopoverShow"
+            >
+              <template #trigger>
+                <div class="icon-btn notification" style="position: relative; cursor: pointer;" aria-label="消息中心">
+                  <n-badge
+                    v-if="notificationStore.unreadCount > 0"
+                    :value="notificationStore.unreadCount"
+                    :max="99"
+                    style="position: absolute; top: -5px; right: -5px;"
+                  />
+                </div>
+              </template>
+
+              <div class="notif-dropdown">
+                <div class="notif-header">
+                  <span class="notif-header-title">消息通知</span>
+                  <button
+                    v-if="notificationStore.unreadCount > 0"
+                    class="notif-read-all"
+                    @click="notificationStore.markAllRead()"
+                  >全部已讀</button>
+                </div>
+
+                <div v-if="!isLoggedIn" class="notif-empty">請先登入查看消息</div>
+                <template v-else>
+                  <div v-if="notificationStore.items.length === 0" class="notif-empty">目前沒有消息</div>
+                  <div v-else class="notif-list">
+                    <div
+                      v-for="item in notificationStore.items.slice(0, 5)"
+                      :key="item.notificationId"
+                      class="notif-item"
+                      :class="{ 'notif-unread': !item.isRead }"
+                      @click="onNotifClick(item)"
+                    >
+                      <div class="notif-item-title">{{ item.title }}</div>
+                      <div class="notif-item-content">{{ item.content }}</div>
+                      <div class="notif-item-time">{{ formatNotifTime(item.createdAt) }}</div>
+                    </div>
+                  </div>
+                  <div class="notif-footer">
+                    <span v-if="notifNoMsgTip" class="notif-no-msg-tip">目前沒有消息</span>
+                    <a class="notif-all-link" @click.prevent="handleViewAll">查看全部 →</a>
+                  </div>
+                </template>
+              </div>
+            </n-popover>
 
             <NuxtLink
               to="/cart"
@@ -52,15 +99,40 @@
             <ul>
               <li><NuxtLink to="/" class="home">首頁</NuxtLink></li>
 
-              <li>
-                <n-dropdown
-                  trigger="hover"
-                  placement="bottom-start"
-                  :options="categoryOptions"
-                  @select="handleCategorySelect"
-                >
-                  <button type="button" class="nav-link-btn">商品分類</button>
-                </n-dropdown>
+              <li class="navCategoryMenu">
+                <button type="button" class="nav-link-btn">商品分類</button>
+                <div class="navCategoryDropdown">
+                  <ul class="navCatList">
+                    <li>
+                      <button class="navCatItem" @click="router.push('/shop/popular')">人氣商品推薦</button>
+                    </li>
+                    <li v-for="parent in navMenuTree" :key="parent.slug">
+                      <div class="navCatParentRow">
+                        <button
+                          class="navCatItem"
+                          @click="router.push(`/shop/${parent.slug}`)"
+                        >★ {{ parent.nameZh }}</button>
+                        <button
+                          v-if="parent.children.length > 0"
+                          class="navCatToggle"
+                          @click.stop="toggleNavParent(parent.slug)"
+                        >{{ navExpandedParents[parent.slug] ? '▲' : '▼' }}</button>
+                      </div>
+                      <ul v-if="parent.children.length > 0 && navExpandedParents[parent.slug]" class="navCatSubList">
+                        <li v-for="sub in parent.children" :key="sub.slug">
+                          <button
+                            class="navCatItem navCatSubItem"
+                            @click="router.push(`/shop/${sub.slug}`)"
+                          >★ {{ sub.nameZh }}</button>
+                        </li>
+                      </ul>
+                    </li>
+                    <li class="navCatDivider"></li>
+                    <li>
+                      <button class="navCatItem" @click="router.push('/shop/popular')">更多...</button>
+                    </li>
+                  </ul>
+                </div>
               </li>
 
               <li>
@@ -165,6 +237,8 @@ import { useRouter } from "vue-router";
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { categoryService, type Category } from "@/services/category";
 import { useCartStore } from "@/stores/cart";
+import { useNotificationStore } from "@/stores/notification";
+import type { NotificationItem } from "@/services/notification";
 
 const config = useRuntimeConfig();
 
@@ -182,6 +256,45 @@ const isAdmin = computed(() => memberInfo.value?.role === "ADMIN");
 
 const router = useRouter();
 const cartStore = useCartStore();
+const notificationStore = useNotificationStore();
+
+// ── 通知 ──
+const notifNoMsgTip = ref(false);
+let notifTipTimer: ReturnType<typeof setTimeout> | null = null;
+
+const onNotifPopoverShow = (show: boolean) => {
+  if (show && isLoggedIn.value) {
+    notificationStore.fetchNotifications();
+  }
+};
+
+const handleViewAll = () => {
+  if (notificationStore.items.length === 0) {
+    notifNoMsgTip.value = true;
+    if (notifTipTimer) clearTimeout(notifTipTimer);
+    notifTipTimer = setTimeout(() => { notifNoMsgTip.value = false; }, 2000);
+    return;
+  }
+  router.push("/member/qa");
+};
+
+const onNotifClick = async (item: NotificationItem) => {
+  if (!item.isRead) {
+    await notificationStore.markRead(item.notificationId);
+  }
+  router.push(item.linkUrl || "/member/qa");
+};
+
+const formatNotifTime = (dateStr: string) => {
+  if (!dateStr) return "";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "剛剛";
+  if (m < 60) return `${m} 分鐘前`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} 小時前`;
+  return `${Math.floor(h / 24)} 天前`;
+};
 
 // ── 搜尋 ──
 const searchQuery = ref("");
@@ -208,18 +321,21 @@ const handleLoginSuccess = () => {
   // 此時若 LoginRegister 有把 token 存到 cookie，memberOptions 會自動變成「登出」
 };
 
-// navbar 下拉選單 - 動態載入分類
+// navbar 商品分類自訂下拉
 const categories = ref<Category[]>([]);
-const categoryOptions = computed<DropdownOption[]>(() => [
-  { label: "人氣商品推薦", key: "/shop/popular" },
-  ...categories.value.map((cat) => ({
-    label: `★ ${cat.nameZh}`,
-    key: `/shop/${cat.slug}`,
-  })),
-]);
+const navExpandedParents = ref<Record<string, boolean>>({});
 
-const handleCategorySelect = (key: string | number) => {
-  router.push(key as string);
+const navMenuTree = computed(() => {
+  const parents = categories.value.filter((c) => !c.parentId);
+  const subs = categories.value.filter((c) => c.parentId);
+  return parents.map((parent) => ({
+    ...parent,
+    children: subs.filter((c) => c.parentId === parent.categoryId),
+  }));
+});
+
+const toggleNavParent = (slug: string) => {
+  navExpandedParents.value[slug] = !navExpandedParents.value[slug];
 };
 
 const buyContentOptions: DropdownOption[] = [
@@ -243,17 +359,17 @@ const aboutUsSelect = (key: string | number) => {
 const memberOptions = computed<DropdownOption[]>(() => {
   if (!isLoggedIn.value) {
     return [
+      { label: "★ 會員專區", key: "/member" },
       { label: "★ 訂單資訊", key: "/member/orders" },
       { label: "★ 收藏專區", key: "/member/wishlist" },
-      { label: "★ 會員專區", key: "/member" },
       { label: "★ 登入／註冊", key: "login-modal" },
     ];
   }
 
   const options: DropdownOption[] = [
+    { label: "★ 會員專區", key: "/member" },
     { label: "★ 訂單資訊", key: "/member/orders" },
     { label: "★ 收藏專區", key: "/member/wishlist" },
-    { label: "★ 會員專區", key: "/member" },
   ];
 
   if (isAdmin.value) {
@@ -325,6 +441,7 @@ onMounted(async () => {
   if (isLoggedIn.value) {
     cartStore.fetchCart();
     syncMemberRole();
+    notificationStore.startPolling();
   }
 
   try {
@@ -342,6 +459,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
+  notificationStore.stopPolling();
 });
 </script>
 

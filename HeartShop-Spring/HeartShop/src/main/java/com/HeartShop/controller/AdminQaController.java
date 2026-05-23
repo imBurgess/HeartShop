@@ -6,6 +6,7 @@ import com.HeartShop.entity.ProductQa;
 import com.HeartShop.exception.BusinessException;
 import com.HeartShop.mapper.OrderQaMapper;
 import com.HeartShop.mapper.ProductQaMapper;
+import com.HeartShop.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ public class AdminQaController {
 
     private final ProductQaMapper productQaMapper;
     private final OrderQaMapper orderQaMapper;
+    private final NotificationService notificationService;
 
     // ── 商品問答 ────────────────────────────────────────────
 
@@ -50,11 +52,33 @@ public class AdminQaController {
         if (!StringUtils.hasText(answer)) {
             throw new BusinessException("4000", "回覆內容不能為空");
         }
+
+        ProductQa qa = productQaMapper.findById(qaId);
+        if (qa == null) {
+            throw new BusinessException("4004", "問題不存在");
+        }
+
         int updated = productQaMapper.updateAnswer(qaId, answer.trim());
         if (updated == 0) {
             throw new BusinessException("4004", "問題不存在");
         }
+
+        notificationService.createQaReplyNotification(
+                qa.getMemberId(),
+                qa.getProductName() != null ? qa.getProductName() : "商品",
+                qa.getProductId()
+        );
+
         return ApiResponse.success("回覆成功", null);
+    }
+
+    @DeleteMapping("/products/{qaId}")
+    public ApiResponse<Void> deleteProductQa(@PathVariable Long qaId) {
+        int deleted = productQaMapper.deleteById(qaId);
+        if (deleted == 0) {
+            throw new BusinessException("4004", "問題不存在");
+        }
+        return ApiResponse.success("刪除成功", null);
     }
 
     // ── 訂單問答 ────────────────────────────────────────────
@@ -86,10 +110,31 @@ public class AdminQaController {
         if (!StringUtils.hasText(answer)) {
             throw new BusinessException("4000", "回覆內容不能為空");
         }
+
+        OrderQa qa = orderQaMapper.findById(qaId);
+        if (qa == null) {
+            throw new BusinessException("4004", "問題不存在");
+        }
+
         int updated = orderQaMapper.updateAnswer(qaId, answer.trim());
         if (updated == 0) {
             throw new BusinessException("4004", "問題不存在");
         }
+
+        notificationService.createOrderQaReplyNotification(
+                qa.getMemberId(),
+                qa.getOrderNo() != null ? qa.getOrderNo() : "訂單"
+        );
+
         return ApiResponse.success("回覆成功", null);
+    }
+
+    @DeleteMapping("/orders/{qaId}")
+    public ApiResponse<Void> deleteOrderQa(@PathVariable Long qaId) {
+        int deleted = orderQaMapper.deleteById(qaId);
+        if (deleted == 0) {
+            throw new BusinessException("4004", "問題不存在");
+        }
+        return ApiResponse.success("刪除成功", null);
     }
 }

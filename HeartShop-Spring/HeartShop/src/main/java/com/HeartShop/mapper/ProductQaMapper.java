@@ -23,4 +23,8 @@ public interface ProductQaMapper {
     long adminCountAll(@Param("answered") Boolean answered);
 
     int updateAnswer(@Param("qaId") Long qaId, @Param("answer") String answer);
+
+    ProductQa findById(@Param("qaId") Long qaId);
+
+    int deleteById(@Param("qaId") Long qaId);
 }

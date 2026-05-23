@@ -3,7 +3,39 @@
     <!-- 左邊：側邊欄 -->
     <aside class="leftSidebar" aria-label="商品分類">
       <h2>商品分類</h2>
-      <n-menu :options="menuOptions" @update:value="handleMenuSelect" />
+      <ul class="sideMenu">
+        <li>
+          <button
+            class="sideMenuItem"
+            :class="{ active: slug === 'popular' }"
+            @click="router.push('/shop/popular')"
+          >人氣商品推薦</button>
+        </li>
+        <li v-for="parent in menuTree" :key="parent.slug">
+          <div class="sideMenuParentRow">
+            <button
+              class="sideMenuItem"
+              :class="{ active: slug === parent.slug }"
+              @click="router.push(`/shop/${parent.slug}`)"
+            >★ {{ parent.nameZh }}</button>
+            <button
+              v-if="parent.children.length > 0"
+              class="sideToggleBtn"
+              @click="toggleParent(parent.slug)"
+              :aria-expanded="!!expandedParents[parent.slug]"
+            >{{ expandedParents[parent.slug] ? '▲' : '▼' }}</button>
+          </div>
+          <ul v-if="parent.children.length > 0 && expandedParents[parent.slug]" class="sideSubMenu">
+            <li v-for="sub in parent.children" :key="sub.slug">
+              <button
+                class="sideMenuItem sideSubItem"
+                :class="{ active: slug === sub.slug }"
+                @click="router.push(`/shop/${sub.slug}`)"
+              >★ {{ sub.nameZh }}</button>
+            </li>
+          </ul>
+        </li>
+      </ul>
     </aside>
 
     <!-- 右邊：內容區 -->
@@ -108,50 +140,35 @@ const defaultBanner = {
 };
 
 const currentBanner = computed(() => {
-  // 如果是特殊頁面（如 popular），使用預設 banner
   if (slug.value === "popular") {
     return bannerMap.popular || defaultBanner;
   }
 
-  // 從 categories 中找對應的分類，使用其 bannerUrl
   const category = categories.value.find((c) => c.slug === slug.value);
-  if (category?.bannerUrl) {
-    // 使用 VITE_API_BASE_URL（不含 /api 路徑）
-    // 因為 bannerUrl 已經包含 /api/uploads/ 前綴
+
+  // 子分類若無自己的 banner，繼承父分類的 banner
+  let bannerUrl = category?.bannerUrl;
+  if (!bannerUrl && category?.parentId) {
+    const parent = categories.value.find((c) => c.categoryId === category.parentId);
+    bannerUrl = parent?.bannerUrl;
+  }
+
+  if (bannerUrl) {
     const apiHost = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
     return {
-      src: category.bannerUrl.startsWith("http")
-        ? category.bannerUrl
-        : `${apiHost}${category.bannerUrl}`,
-      alt: `${category.nameZh} Banner`,
+      src: bannerUrl.startsWith("http") ? bannerUrl : `${apiHost}${bannerUrl}`,
+      alt: `${category?.nameZh} Banner`,
     };
   }
 
-  // 都沒有就用預設
   return defaultBanner;
 });
 
-// 左側導覽列（改為動態載入）
-const menuOptions = ref([
-  { label: "人氣商品推薦", key: "popular", route: "/shop/popular" },
-]);
+// ---------------- 側邊欄折疊狀態 ----------------
+const expandedParents = ref({});
 
-const findOptionByKey = (options, key) => {
-  for (const opt of options) {
-    if (opt.key === key) return opt;
-    if (opt.children) {
-      const found = findOptionByKey(opt.children, key);
-      if (found) return found;
-    }
-  }
-  return null;
-};
-
-const handleMenuSelect = (key) => {
-  const opt = findOptionByKey(menuOptions.value, key);
-  if (opt?.route) {
-    router.push(opt.route);
-  }
+const toggleParent = (slug) => {
+  expandedParents.value[slug] = !expandedParents.value[slug];
 };
 
 // ---------------- API 資料 fetching ----------------
@@ -159,23 +176,30 @@ const categories = ref([]);
 const products = ref([]);
 const loading = ref(false);
 
+// 階層化分類樹（父分類 + 其子分類）
+const menuTree = computed(() => {
+  const parents = categories.value.filter((c) => !c.parentId);
+  const subs = categories.value.filter((c) => c.parentId);
+  return parents.map((parent) => ({
+    ...parent,
+    children: subs.filter((c) => c.parentId === parent.categoryId),
+  }));
+});
+
 // 載入所有分類 (用來將 slug 對應到 categoryId)
 const fetchCategories = async () => {
   try {
     const res = await $fetch("/api/categories");
-    // 修正：後端回傳 code: "0000"
     if (res.code === "0000") {
       categories.value = res.data || [];
 
-      // 動態產生側邊欄選單（保留「人氣商品推薦」，其他從資料庫載入）
-      menuOptions.value = [
-        { label: "人氣商品推薦", key: "popular", route: "/shop/popular" },
-        ...categories.value.map((cat) => ({
-          label: `★ ${cat.nameZh}`,
-          key: cat.slug,
-          route: `/shop/${cat.slug}`,
-        })),
-      ];
+      // 若目前 slug 是子分類，自動展開父分類
+      const currentSub = categories.value.find((c) => c.slug === slug.value && c.parentId);
+      if (currentSub) {
+        expandedParents.value[
+          categories.value.find((c) => c.categoryId === currentSub.parentId)?.slug
+        ] = true;
+      }
     }
   } catch (err) {
     console.error("載入分類失敗", err);
@@ -278,10 +302,9 @@ const addToCart = async (item) => {
     return;
   }
 
-  // 從 sizeInfo 取得第一個尺寸，若無則預設為 "F"
-  const defaultSize = item.sizeInfo 
-    ? item.sizeInfo.split(/[,/]/)[0].trim() 
-    : "F";
+  const defaultSize = item.sizeInfo
+    ? item.sizeInfo.split(/[,/]/)[0].trim()
+    : "Free Size";
 
   const cartStore = useCartStore();
   const success = await cartStore.addToCart(item.id, defaultSize, item.quantity);
@@ -342,6 +365,57 @@ const filteredProducts = computed(() => {
 
 .leftSidebar h2 {
   margin-left: 25px;
+}
+
+.sideMenu,
+.sideSubMenu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sideMenuParentRow {
+  display: flex;
+  align-items: center;
+}
+
+.sideMenuItem {
+  flex: 1;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 25px;
+  cursor: pointer;
+  font-size: 14px;
+  color: inherit;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #5a8a6a;
+  }
+
+  &.active {
+    color: #5a8a6a;
+    font-weight: 600;
+  }
+}
+
+.sideSubItem {
+  font-size: 13px;
+  padding-left: 40px;
+}
+
+.sideToggleBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 16px 10px 0;
+  font-size: 9px;
+  color: #aaa;
+
+  &:hover {
+    color: #5a8a6a;
+  }
 }
 
 /* Banner */

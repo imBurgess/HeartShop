@@ -22,7 +22,7 @@ export const qaService = {
   async addQuestion(productId: number, question: string): Promise<QaItem> {
     return apiFetch<QaItem>(`/api/products/${productId}/qa`, {
       method: 'POST',
-      body: JSON.stringify({ question }),
+      body: { question },
     })
   },
 
@@ -41,7 +41,7 @@ export const qaService = {
   async addOrderQuestion(orderNo: string, question: string): Promise<QaItem> {
     return apiFetch<QaItem>(`/api/orders/${orderNo}/qa`, {
       method: 'POST',
-      body: JSON.stringify({ question }),
+      body: { question },
     })
   },
 }

@@ -92,7 +92,8 @@ public class CategoryService {
         category.setParentId(request.getParentId());
         category.setSortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0);
         category.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
-        
+        category.setBannerUrl(request.getBannerUrl());
+
         categoryMapper.insertCategory(category);
         
         log.info("分類建立成功,ID: {}", category.getCategoryId());
