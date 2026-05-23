@@ -67,17 +67,6 @@
                 <n-dropdown
                   trigger="hover"
                   placement="bottom-start"
-                  :options="goodsUploadOptions"
-                  @select="goodsUploadSelect"
-                >
-                  <button type="button" class="nav-link-btn">門市收購</button>
-                </n-dropdown>
-              </li>
-
-              <li>
-                <n-dropdown
-                  trigger="hover"
-                  placement="bottom-start"
                   :options="buyContentOptions"
                   @select="buyContentSelect"
                 >
@@ -230,13 +219,6 @@ const categoryOptions = computed<DropdownOption[]>(() => [
 ]);
 
 const handleCategorySelect = (key: string | number) => {
-  router.push(key as string);
-};
-
-const goodsUploadOptions: DropdownOption[] = [
-  { label: "★ 填寫表單", key: "/GoodsUpload/goodsupload" },
-];
-const goodsUploadSelect = (key: string | number) => {
   router.push(key as string);
 };
 
